@@ -6,13 +6,14 @@ from ollama_client import generate
 from context.contexto import Contexto
 
 from agents.scout import Scout
+from agents.analista_mercado import AnalistaMercado
 
 
 class Maestro:
 
     MAPA_AGENTES = {
         "Scout": Scout,
-        # "Analista Mercado": AnalistaMercado,
+        "Analista Mercado": AnalistaMercado,
         # "Especialista 14.133": Especialista14133,
         # "Redator ETP": RedatorETP,
         # "Redator TR": RedatorTR
