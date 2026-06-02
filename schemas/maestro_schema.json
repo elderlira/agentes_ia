@@ -1,0 +1,43 @@
+{
+    "type": "object",
+    "required": [
+      "tipo_solicitacao",
+      "tipo_documento",
+      "objeto_contratacao",
+      "agentes_necessarios",
+      "status"
+    ],
+    "properties": {
+      "tipo_solicitacao": {
+        "type": "string",
+        "minLength": 1
+      },
+  
+      "tipo_documento": {
+        "type": "string",
+        "enum": [
+          "ETP",
+          "TR"
+        ]
+      },
+  
+      "objeto_contratacao": {
+        "type": "string",
+        "minLength": 1
+      },
+  
+      "agentes_necessarios": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+  
+      "status": {
+        "type": "string"
+      }
+    },
+  
+    "additionalProperties": true
+  }

@@ -1,1 +1,53 @@
 
+{
+    "type": "object",
+    "required": [
+      "objeto_identificado",
+      "categoria",
+      "natureza_objeto",
+      "finalidade_principal",
+      "resultado_esperado",
+      "status"
+    ],
+    "properties": {
+      "objeto_identificado": {
+        "type": "string"
+      },
+      "categoria": {
+        "type": "string"
+      },
+      "subcategorias": {
+        "type": "array"
+      },
+      "natureza_objeto": {
+        "type": "string"
+      },
+      "finalidade_principal": {
+        "type": "string"
+      },
+      "resultado_esperado": {
+        "type": "string"
+      },
+      "restricoes_explicitas_identificadas": {
+        "type": "array"
+      },
+      "palavras_chave": {
+        "type": "array"
+      },
+      "termos_correlatos": {
+        "type": "array"
+      },
+      "estrategias_busca": {
+        "type": "array"
+      },
+      "objetos_semelhantes": {
+        "type": "array"
+      },
+      "escopo_funcional": {
+        "type": "array"
+      },
+      "status": {
+        "type": "string"
+      }
+    }
+  }

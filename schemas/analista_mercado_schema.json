@@ -1,0 +1,56 @@
+{
+    "type": "object",
+    "required": [
+      "tipos_solucao",
+      "vantagens",
+      "riscos",
+      "status"
+    ],
+    "properties": {
+      "tipos_solucao": {
+        "type": "array"
+      },
+      "modelos_de_disponibilizacao": {
+        "type": "array"
+      },
+      "formas_fornecimento_comuns": {
+        "type": "array"
+      },
+      "elementos_funcionais_comumente_encontrados": {
+        "type": "array"
+      },
+      "capacidades_comumente_encontradas": {
+        "type": "array"
+      },
+      "aspectos_tecnicos_relevantes": {
+        "type": "array"
+      },
+      "integracoes_comuns": {
+        "type": "array"
+      },
+      "vantagens": {
+        "type": "array"
+      },
+      "riscos": {
+        "type": "array"
+      },
+      "condicionantes_operacionais": {
+        "type": "array"
+      },
+      "aspectos_lgpd_e_privacidade": {
+        "type": "array"
+      },
+      "limitacoes_comuns": {
+        "type": "array"
+      },
+      "objetos_correlatos_encontrados": {
+        "type": "array"
+      },
+      "observacoes_relevantes": {
+        "type": "array"
+      },
+      "status": {
+        "type": "string"
+      }
+    }
+  }
