@@ -89,6 +89,29 @@ AGENTES DISPONÍVEIS:
 5. Redator ETP
 6. Redator TR
 
+REGRAS DE ORQUESTRAÇÃO
+
+Quando o tipo_documento for ETP:
+
+Acionar obrigatoriamente:
+
+1. Scout
+2. Analista Mercado
+3. Especialista 14.133
+4. Redator ETP
+
+Quando o tipo_documento for TR:
+
+Acionar obrigatoriamente:
+
+1. Scout
+2. Analista Mercado
+3. Especialista 14.133
+4. Redator TR
+
+Não omitir agentes obrigatórios.
+
+
 FORMATO DE SAÍDA:
 
 Tipo da Solicitação:
@@ -109,4 +132,21 @@ Objetivo:
 
 Status:
 [Aguardando execução dos agentes]
+
+RETORNE APENAS JSON VÁLIDO.
+
+{
+  "tipo_solicitacao": "",
+  "tipo_documento": "",
+  "objeto_contratacao": "",
+  "agentes_necessarios": [],
+  "status": ""
+}
+
+Não utilize markdown.
+
+Não utilize explicações.
+
+Retorne apenas JSON.
+
 
