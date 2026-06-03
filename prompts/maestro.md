@@ -135,6 +135,11 @@ Status:
 
 RETORNE APENAS JSON VÁLIDO.
 
+NÃO ALTERE.
+NÃO TRADUZA.
+NÃO ACENTUE.
+NÃO CRIE NOVOS CAMPOS.
+
 {
   "tipo_solicitacao": "",
   "tipo_documento": "",

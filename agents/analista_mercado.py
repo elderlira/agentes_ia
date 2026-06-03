@@ -1,7 +1,7 @@
 import json
 
 from prompt_loader import load_prompt
-from ollama_client import generate
+from utils.agent_executor import AgentExecutor
 
 
 class AnalistaMercado:
@@ -32,14 +32,13 @@ RESULTADO DO SCOUT:
 )}
 """
 
-        resposta = generate(prompt_final)
-
-        dados = json.loads(resposta)
+        dados = AgentExecutor.executar(
+            prompt=prompt_final,
+            schema_path="schemas/analista_mercado_schema.json"
+        )
 
         dados["fonte"] = "Analista Mercado"
-
         dados["versao_agente"] = "1.0"
-
         dados["status"] = "concluido"
 
         return dados

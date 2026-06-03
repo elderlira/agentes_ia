@@ -29,13 +29,19 @@ class SchemaValidator:
         except ValidationError as erro:
 
             raise Exception(
-                f"""
+    f"""
 Schema inválido.
 
 Arquivo:
 {schema_path}
 
+Campo:
+{' -> '.join(str(x) for x in erro.path)}
+
 Erro:
 {erro.message}
+
+Valor recebido:
+{erro.instance}
 """
-            )
+)

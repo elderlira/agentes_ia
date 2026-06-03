@@ -3,7 +3,7 @@ from maestro import Maestro
 maestro = Maestro()
 #    "Crie um ETP para contratação de sistema de contagem de pessoas por inteligência artificial."
 resultado = maestro.processar(
-    "Crie um ETP para contratação de serviços de limpeza predial."
+    "Sistema de contagem de pessoas por IA"
 )
 
 print(resultado)

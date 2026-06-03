@@ -1,15 +1,13 @@
 from prompt_loader import load_prompt
-from ollama_client import generate
 
 from context.contexto import Contexto
 
 from agents.scout import Scout
 from agents.analista_mercado import AnalistaMercado
+from agents.especialista_14133 import Especialista14133
 
-from validators.schema_validator import SchemaValidator
-from utils.json_parser import extrair_json
+from utils.agent_executor import AgentExecutor
 
-from jsonschema import ValidationError
 
 
 class Maestro:
@@ -19,14 +17,9 @@ class Maestro:
     MAPA_AGENTES = {
         "Scout": Scout,
         "Analista Mercado": AnalistaMercado,
-        # "Especialista 14.133": Especialista14133,
+        "Especialista 14.133": Especialista14133,
         # "Redator ETP": RedatorETP,
         # "Redator TR": RedatorTR
-    }
-
-    MAPA_SCHEMAS = {
-        "Scout": "schemas/scout_schema.json",
-        "Analista Mercado": "schemas/analista_mercado_schema.json"
     }
 
     def __init__(self):
@@ -68,60 +61,35 @@ class Maestro:
                 .replace("ã", "a")
             )
 
-            resultado = agente.executar(
-                self.contexto.obter()
-            )
+            try:
 
-            schema_path = self.MAPA_SCHEMAS.get(
-                agente_nome
-            )
+                resultado = agente.executar(
+                    self.contexto.obter()
+                )
 
-            if schema_path:
+                self.contexto.atualizar(
+                    chave_contexto,
+                    resultado
+                )
 
-                try:
+                self.contexto.registrar_execucao(
+                    agente_nome,
+                    "concluido"
+                )
 
-                    SchemaValidator.validar(
-                        resultado,
-                        schema_path
-                    )
+            except Exception as erro:
 
-                except ValidationError as erro:
+                self.contexto.atualizar(
+                    f"{chave_contexto}_erro",
+                    str(erro)
+                )
 
-                    self.contexto.registrar_execucao(
-                        agente_nome,
-                        "erro_schema"
-                    )
+                self.contexto.registrar_execucao(
+                    agente_nome,
+                    "erro"
+                )
 
-                    self.contexto.atualizar(
-                        f"{chave_contexto}_erro",
-                        erro.message
-                    )
-
-                    continue
-
-                except Exception as erro:
-
-                    self.contexto.registrar_execucao(
-                        agente_nome,
-                        "erro_schema"
-                    )
-
-                    self.contexto.atualizar(
-                        f"{chave_contexto}_erro",
-                        str(erro)
-                    )
-
-                    continue
-
-            self.contexto.atualizar(
-                chave_contexto,
-                resultado
-            )
-
-            self.contexto.registrar_execucao(
-                agente_nome,
-                "concluido"
-            )
+                continue
 
     def processar(self, pergunta):
 
@@ -141,60 +109,10 @@ SOLICITAÇÃO DO USUÁRIO:
 
 {pergunta}
 """
-
-        resposta = generate(
-            prompt_final
+        dados_maestro = AgentExecutor.executar(
+            prompt=prompt_final,
+            schema_path=self.SCHEMA_MAESTRO
         )
-
-        try:
-
-            dados_maestro = extrair_json(
-                resposta
-            )
-
-        except Exception:
-
-            raise Exception(
-                f"""
-O Maestro não retornou um JSON válido.
-
-Resposta recebida:
-
-{resposta}
-"""
-            )
-
-        try:
-
-            SchemaValidator.validar(
-                dados_maestro,
-                self.SCHEMA_MAESTRO
-            )
-
-        except ValidationError as erro:
-
-            raise Exception(
-                f"""
-Erro de validação do Maestro
-
-Schema:
-{self.SCHEMA_MAESTRO}
-
-Detalhes:
-{erro.message}
-"""
-            )
-
-        except Exception as erro:
-
-            raise Exception(
-                f"""
-Erro ao validar o schema do Maestro.
-
-Detalhes:
-{str(erro)}
-"""
-            )
 
         self.contexto.atualizar(
             "maestro",

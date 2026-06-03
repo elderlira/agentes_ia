@@ -47,3 +47,17 @@ def extrair_json(texto):
         return json.loads(
             match.group()
         )
+    
+def normalizar_campos(dados):
+
+    mapa = {
+        "objeto_contratação": "objeto_contratacao",
+        "tipo_documentação": "tipo_documento",
+    }
+
+    for antigo, novo in mapa.items():
+
+        if antigo in dados:
+            dados[novo] = dados.pop(antigo)
+
+    return dados
