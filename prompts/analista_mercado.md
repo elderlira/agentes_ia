@@ -229,5 +229,6 @@ Formato obrigatório:
   "aspectos_lgpd_e_privacidade": [],
   "limitacoes_comuns":[],
   "objetos_correlatos_encontrados": [],
-  "observacoes_relevantes": []
+  "observacoes_relevantes": [],
+  "fornecedores_referencia": []
 }
