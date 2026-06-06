@@ -230,5 +230,4 @@ Formato obrigatório:
   "limitacoes_comuns":[],
   "objetos_correlatos_encontrados": [],
   "observacoes_relevantes": [],
-  "fornecedores_referencia": []
 }

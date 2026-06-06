@@ -2,18 +2,15 @@
     "type": "object",
     "required": [
       "tipos_solucao",
-      "fornecedores_referencia",
       "vantagens",
-      "riscos",
-      "status",
-      "criterios_comparativos"
+      "riscos"
     ],
     "properties": {
       "tipos_solucao": {
         "type": "array",
         "minItems": 1,
         "items": {
-          "type": "object",
+          "type": "string",
           "required": [
             "categoria",
             "descricao",
@@ -82,23 +79,7 @@
      "riscos": {
         "type": "array",
         "items": {
-          "type": "object",
-          "required": [
-            "risco",
-            "impacto",
-            "mitigacao"
-          ],
-          "properties": {
-            "risco": {
-              "type": "string"
-            },
-            "impacto": {
-              "type": "string"
-            },
-            "mitigacao": {
-              "type": "string"
-            }
-          }
+          "type": "string"
         }
       },
       "condicionantes_operacionais": {
@@ -115,59 +96,6 @@
       },
       "observacoes_relevantes": {
         "type": "array"
-      },
-      "status": {
-        "type": "string",
-        "enum": [
-          "concluido",
-          "erro",
-          "parcial"
-        ]
-      },
-      "fornecedores_referencia": {
-        "type": "array",
-        "minItems": 3,
-        "items": {
-          "type": "object",
-          "required": [
-            "nome",
-            "pais",
-            "tipo_solucao",
-            "descricao"
-          ],
-          "properties": {
-            "nome": {
-              "type": "string"
-            },
-            "pais": {
-              "type": "string"
-            },
-            "tipo_solucao": {
-              "type": "string"
-            },
-            "descricao": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "criterios_comparativos": {
-        "type": "array",
-        "items": {
-          "type": "object",
-          "required": [
-            "criterio",
-            "importancia"
-          ],
-          "properties": {
-            "criterio": {
-              "type": "string"
-            },
-            "importancia": {
-              "type": "string"
-            }
-          }
-        }
       }
     }
   }

@@ -98,7 +98,6 @@ Acionar obrigatoriamente:
 1. Scout
 2. Analista Mercado
 3. Especialista 14.133
-4. Redator ETP
 
 Quando o tipo_documento for TR:
 
@@ -107,51 +106,35 @@ Acionar obrigatoriamente:
 1. Scout
 2. Analista Mercado
 3. Especialista 14.133
-4. Redator TR
 
 Não omitir agentes obrigatórios.
 
+SAÍDA OBRIGATÓRIA
 
-FORMATO DE SAÍDA:
+Retorne exclusivamente um objeto JSON.
 
-Tipo da Solicitação:
-[classificação da demanda]
-
-Tema:
-[tema identificado]
-
-Plano de Execução:
-
-1. [Agente]
-Objetivo:
-[o que deverá fazer]
-
-2. [Agente]
-Objetivo:
-[o que deverá fazer]
-
-Status:
-[Aguardando execução dos agentes]
-
-RETORNE APENAS JSON VÁLIDO.
-
-NÃO ALTERE.
-NÃO TRADUZA.
-NÃO ACENTUE.
-NÃO CRIE NOVOS CAMPOS.
+Utilize exatamente estes campos:
 
 {
-  "tipo_solicitacao": "",
-  "tipo_documento": "",
+  "tipo_solicitacao": "Elaboracao de documento para contratacao publica",
+  "tipo_documento": "ETP",
   "objeto_contratacao": "",
   "agentes_necessarios": [],
-  "status": ""
+  "status": "Aguardando execucao dos agentes"
 }
 
-Não utilize markdown.
+Regras:
 
-Não utilize explicações.
-
-Retorne apenas JSON.
-
-
+- Não traduza nomes de campos.
+- Não utilize inglês.
+- Não utilize type_documento.
+- Não utilize objeto.
+- Não utilize agents_necessarios.
+- Utilize exatamente:
+  tipo_solicitacao
+  tipo_documento
+  objeto_contratacao
+  agentes_necessarios
+  status
+- Não retorne texto fora do JSON.
+- Não retorne markdown.

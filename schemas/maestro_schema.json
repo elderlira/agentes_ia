@@ -10,7 +10,9 @@
     "properties": {
       "tipo_solicitacao": {
         "type": "string",
-        "minLength": 1
+        "enum": [
+          "Elaboracao de documento para contratacao publica"
+        ]
       },
   
       "tipo_documento": {
@@ -35,7 +37,10 @@
       },
   
       "status": {
-        "type": "string"
+        "type": "string",
+        "enum": [
+          "Aguardando execucao dos agentes"
+        ]
       }
     },
   

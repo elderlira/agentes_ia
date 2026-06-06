@@ -1,0 +1,377 @@
+{
+    "type": "object",
+    "required": [
+        "objeto_analisado",
+        "categoria_contratacao",
+        "jurisprudencias_relevantes",
+        "teses_aplicaveis",
+        "riscos_identificados",
+        "boas_praticas",
+        "recomendacoes_para_etp",
+        "recomendacoes_para_tr",
+        "alertas_controle_externo",
+        "nivel_confianca",
+        "nivel_evidencia",
+        "palavras_chaves",
+        "status_pesquisa",
+        "justificativa_status",
+        "conclusao_executiva",
+        "fonte_consultada",
+        "indicador_alucinacao"
+    ],
+    "properties": {
+
+        "objeto_analisado": {
+            "type": "string"
+        },
+
+        "categoria_contratacao": {
+            "type": "string"
+        },
+
+        "jurisprudencias_relevantes": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+                "type": "object",
+                "required": [
+                    "acordao",
+                    "colegiado",
+                    "ano",
+                    "tema",
+                    "resumo",
+                    "link_referencia",
+                    "link_verificado",
+                    "aplicabilidade",
+                    "relevancia",
+                    "tipo_fonte",
+                    "peso_recomendacao", 
+                    "fonte_verificada"
+                ],
+                "properties": {
+
+                    "acordao": {
+                        "type": "string"
+                    },
+
+                    "colegiado": {
+                        "type": "string",
+                        "enum": [
+                            "Plenario",
+                            "Primeira Camara",
+                            "Segunda Camara",
+                            "Nao Informado"
+                        ]
+                        },
+
+                    "ano": {
+                        "type": "integer",
+                        "minimum": 1990,
+                        "maximum": 2026
+                    },
+
+                    "tema": {
+                        "type": "string"
+                    },
+
+                    "resumo": {
+                        "type": "string"
+                    },
+                    "link_referencia": {
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "link_verificado": {
+                        "type": "boolean"
+                    },
+
+                    "aplicabilidade": {
+                        "type": "string"
+                    },
+
+                    "relevancia": {
+                        "type": "string",
+                        "enum": [
+                            "Alta",
+                            "Media",
+                            "Baixa"
+                        ]
+                    },
+                    "tipo_fonte": {
+                        "type": "string",
+                        "enum": [
+                            "Acordao",
+                            "Sumula",
+                            "Informativo",
+                            "Manual",
+                            "Referencial"
+                        ]
+                    },
+                    "peso_recomendacao": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 10
+                    },
+                    "fonte_verificada": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+
+        "teses_aplicaveis": {
+            "type": "array",
+            "minItems" :3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "tese",
+                    "origem",
+                    "impacto",
+                    "justificativa"
+                ],
+                "properties": {
+
+                    "tese": {
+                        "type": "string"
+                    },
+
+                    "origem": {
+                        "type": "string"
+                    },
+
+                    "impacto": {
+                        "type": "string"
+                    },
+
+                    "justificativa": {
+                        "type": "string",
+                        "minLength": 20
+                    }
+                }
+            }
+        },
+
+        "riscos_identificados": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "risco",
+                    "origem",
+                    "criticidade",
+                    "descricao",
+                    "mitigacao"
+                ],
+                "properties": {
+
+                    "risco": {
+                        "type": "string"
+                    },
+
+                    "origem": {
+                        "type": "string"
+                    },
+
+                   "criticidade": {
+                        "type": "string",
+                        "enum": [
+                            "Alta",
+                            "Media",
+                            "Baixa"
+                        ]
+                    },
+
+                    "descricao": {
+                        "type": "string"
+                    },
+
+                    "mitigacao": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+
+        "boas_praticas": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "pratica",
+                    "origem",
+                    "beneficio",
+                    "criticidade"
+                ],
+                "properties": {
+
+                    "pratica": {
+                        "type": "string"
+                    },
+
+                    "origem": {
+                        "type": "string"
+                    },
+
+                    "beneficio": {
+                        "type": "string"
+                    },
+
+                    "criticidade": {
+                        "type": "string",
+                        "enum": [
+                            "Alta",
+                            "Media",
+                            "Baixa"
+                        ]
+                    }
+                }
+            }
+        },
+
+        "recomendacoes_para_etp": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "secao",
+                    "recomendacao",
+                    "prioridade"
+                ],
+                "properties": {
+
+                    "secao": {
+                        "type": "string"
+                    },
+
+                    "recomendacao": {
+                        "type": "string"
+                    },
+
+                    "prioridade": {
+                        "type": "string",
+                        "enum": [
+                            "Alta",
+                            "Media",
+                            "Baixa"
+                        ]
+                    }
+                }
+            }
+        },
+
+        "recomendacoes_para_tr": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+                "type": "object",
+                "required": [
+                    "secao",
+                    "recomendacao",
+                    "prioridade"
+                ],
+                "properties": {
+
+                    "secao": {
+                        "type": "string"
+                    },
+
+                    "recomendacao": {
+                        "type": "string"
+                    },
+
+                    "prioridade": {
+                        "type": "string",
+                        "enum": [
+                            "Alta",
+                            "Media",
+                            "Baixa"
+                        ]
+                    }
+                }
+            }
+        },
+
+        "alertas_controle_externo": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "alerta",
+                    "criticidade",
+                    "fundamentacao"
+                ],
+                "properties": {
+
+                    "alerta": {
+                        "type": "string"
+                    },
+
+                    "criticidade": {
+                        "type": "string",
+                        "enum": [
+                            "Alta",
+                            "Media",
+                            "Baixa"
+                        ]
+                    },
+
+                    "fundamentacao": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+
+        "nivel_confianca": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+        },
+        "nivel_evidencia": {
+            "type": "string",
+            "enum": [
+                "DIRETA",
+                "ANALOGA",
+                "GENERICA"
+            ]
+            },
+        "palavras_chaves": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+                "type": "string"
+            }
+        },
+        "status_pesquisa": {
+            "type": "string",
+            "enum": [
+              "SUCESSO",
+              "SEM_EVIDENCIA"
+            ]
+          },
+        "justificativa_status": {
+            "type": "string",
+            "minLength": 20
+        },
+        "conclusao_executiva": {
+            "type": "string",
+            "minLength": 30
+        },
+        "fonte_consultada": {
+            "type": "string",
+            "enum": [
+                "TCU",
+                "BASE_INTERNA",
+                "TCU_E_BASE_INTERNA",
+                "NAO_LOCALIZADA"
+            ]
+        },
+        "indicador_alucinacao": {
+            "type": "boolean"
+        }
+    }
+}

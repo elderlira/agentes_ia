@@ -29,12 +29,20 @@ class Contexto:
         self.dados[chave] = valor
 
 
-    def registrar_execucao(self, agente, status):
-        self.dados["historico_execucao"].append({
-            "agente": agente,
-            "status": status,
-            "data_hora": datetime.now().isoformat()
-        })
+    def registrar_execucao(self, agente, status, qualidade=None):
+        if qualidade is not None:
+            self.dados["historico_execucao"].append({
+                "agente": agente,
+                "status": status,
+                "qualidade": qualidade,
+                "data_hora": datetime.now().isoformat()
+            })
+        else:
+            self.dados["historico_execucao"].append({
+                "agente": agente,
+                "status": status,
+                "data_hora": datetime.now().isoformat()
+            })
 
     def obter(self):
         return self.dados
