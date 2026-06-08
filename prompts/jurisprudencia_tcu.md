@@ -202,6 +202,18 @@ Quando não existirem jurisprudências específicas para o objeto:
 - classificar a evidência como ANALOGA;
 - reduzir o nível de confiança.
 
+É proibido inventar jurisprudência.
+
+Se não localizar jurisprudência específica do TCU:
+
+- não crie acórdãos
+- não crie entendimentos
+- não crie referências genéricas
+
+Retorne:
+
+"jurisprudencias_relevantes": []
+
 PROCESSO DE ANÁLISE OBRIGATÓRIO
 
 1. Identificar o objeto da contratação.

@@ -84,7 +84,7 @@ AGENTES DISPONÍVEIS:
 
 1. Scout
 2. Analista Mercado
-3. Jurisprudência TCU
+3. Jurisprudencia TCU
 4. Especialista 14.133
 5. Redator ETP
 6. Redator TR
@@ -97,7 +97,8 @@ Acionar obrigatoriamente:
 
 1. Scout
 2. Analista Mercado
-3. Especialista 14.133
+3. Jurisprudencia TCU
+4. Especialista 14.133
 
 Quando o tipo_documento for TR:
 
@@ -105,7 +106,8 @@ Acionar obrigatoriamente:
 
 1. Scout
 2. Analista Mercado
-3. Especialista 14.133
+3. Jurisprudencia TCU
+4. Especialista 14.133
 
 Não omitir agentes obrigatórios.
 

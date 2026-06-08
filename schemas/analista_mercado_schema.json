@@ -10,7 +10,7 @@
         "type": "array",
         "minItems": 1,
         "items": {
-          "type": "string",
+          "type": "object",
           "required": [
             "categoria",
             "descricao",
@@ -46,7 +46,18 @@
             "desvantagens": {
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "object",
+                "required": [
+                  "ponto",
+                  "descricao"
+                ],
+                "properties" :{
+                  "ponto": {
+                    "type": "string"
+                  },
+                  "descricao": {
+                    "type": "string"
+                }
               }
             },
             "indicacao": {
@@ -99,3 +110,4 @@
       }
     }
   }
+}
