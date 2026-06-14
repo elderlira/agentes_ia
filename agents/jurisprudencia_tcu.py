@@ -1,9 +1,13 @@
 from prompt_loader import load_prompt
-from ollama_client import generate
 
-from utils.json_parser import extrair_json
+from utils.agent_executor import AgentExecutor
+
 
 class JurisprudenciaTCU:
+
+    SCHEMA = (
+        "schemas/jurisprudencia_tcu_schema.json"
+    )
 
     def executar(self, contexto):
 
@@ -11,31 +15,100 @@ class JurisprudenciaTCU:
             "jurisprudencia_tcu"
         )
 
-        prompt_final = f""" 
-{prompt}
+        objeto_original = contexto.get(
+            "objeto_original"
+        )
 
-CONTEXTO COMPLETO:
+        if not objeto_original:
 
-{contexto}
-"""
-
-        resposta = generate(
-                prompt_final
+            objeto_original = contexto.get(
+                "objeto_contratacao"
             )
 
-        try:
-
-            return extrair_json(
-                resposta
-            )
-        
-        except Exception:
+        if not objeto_original:
 
             raise Exception(
-                f"""O agente Jurisprudência TCU
-                não retornou um JSON válido.
-                Resposta recebida:
-
-                {resposta}
-                """
+                "OBJETO_ORIGINAL_NAO_LOCALIZADO"
             )
+        
+        palavras_chave = []
+        categoria = ""
+        subcategorias = []
+
+        if "scout" in contexto:
+
+            palavras_chave = contexto["scout"].get(
+                "palavras_chave",
+                []
+            )
+
+            categoria = contexto["scout"].get(
+                "categoria",
+                ""
+            )
+
+            subcategorias = contexto["scout"].get(
+                "subcategorias",
+                []
+            )
+
+        prompt_final = f"""
+{prompt}
+
+OBJETO DA CONTRATAÇÃO:
+
+{objeto_original}
+
+ATENÇÃO CRÍTICA:
+
+O campo objeto_analisado deve conter
+EXATAMENTE o texto abaixo:
+
+{objeto_original}
+
+Copie literalmente o texto.
+
+Não altere palavras.
+Não resuma.
+Não substitua termos.
+Não generalize.
+
+CATEGORIA IDENTIFICADA:
+
+{categoria}
+
+SUBCATEGORIAS:
+
+{subcategorias}
+
+PALAVRAS-CHAVE:
+
+{palavras_chave}
+
+REGRAS OBRIGATÓRIAS:
+
+1. Analise exclusivamente o objeto informado.
+
+2. Caso não encontre jurisprudência,
+retorne SEM_EVIDENCIA.
+
+3. Mesmo em SEM_EVIDENCIA,
+o campo objeto_analisado deve permanecer
+idêntico ao texto informado acima.
+"""
+
+        dados = AgentExecutor.executar(
+            prompt=prompt_final,
+            schema_path=self.SCHEMA,
+            objeto_original=objeto_original
+        )
+
+        dados["fonte"] = (
+            "Jurisprudencia TCU"
+        )
+
+        dados["versao_agente"] = "1.0"
+
+        dados["status"] = "concluido"
+
+        return dados

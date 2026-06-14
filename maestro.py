@@ -6,6 +6,7 @@ from agents.scout import Scout
 from agents.analista_mercado import AnalistaMercado
 from agents.jurisprudencia_tcu import JurisprudenciaTCU
 from agents.especialista_14133 import Especialista14133
+from agents.especialista_tecnico import EspecialistaTecnico
 # from agents.redator_tr import RedatorTR
 # from agents.redator_etp import RedatorETP
 
@@ -22,6 +23,7 @@ class Maestro:
         "Analista Mercado": AnalistaMercado,
         "Jurisprudencia TCU": JurisprudenciaTCU,
         "Especialista 14.133": Especialista14133,
+        "Especialista Tecnico": EspecialistaTecnico
         # "Redator TR": RedatorTR,
         # "Redator ETP": RedatorETP,
     }
@@ -38,12 +40,14 @@ class Maestro:
                 "Analista Mercado",
                 "Jurisprudencia TCU",
                 "Especialista 14.133",
+                "Especialista Tecnico"
             ],
             "TR": [
                 "Scout",
                 "Analista Mercado",
                 "Jurisprudencia TCU",
                 "Especialista 14.133",
+                "Especialista Tecnico"
             ]
         }
 
@@ -155,7 +159,15 @@ SOLICITAÇÃO DO USUÁRIO:
             dados_maestro["objeto_contratacao"]
         )
 
+        self.contexto.atualizar(
+            "objeto_original",
+            dados_maestro["objeto_contratacao"]
+        )
+
         agentes = dados_maestro["agentes_necessarios"]
+
+        print("\nAGENTES PLANEJADOS:")
+        print(agentes)
 
         self.contexto.atualizar(
             "agentes_planejados",

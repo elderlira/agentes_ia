@@ -1,0 +1,116 @@
+{
+  "type": "object",
+  "required": [
+    "requisitos_funcionais",
+    "requisitos_nao_funcionais",
+    "premissas",
+    "restricoes",
+    "riscos_tecnicos",
+    "lacunas_identificadas",
+    "justificativas_tecnicas",
+    "status"
+  ],
+  "properties": {
+
+    "requisitos_funcionais": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "requisito",
+          "origem"
+        ],
+        "properties": {
+          "requisito": {
+            "type": "string"
+          },
+          "origem": {
+            "type": "string",
+            "enum": [
+              "Scout",
+              "Analista Mercado",
+              "Especialista 14.133"
+            ]
+          }
+        }
+      }
+    },
+
+    "requisitos_nao_funcionais": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "requisito",
+          "origem"
+        ],
+        "properties": {
+          "requisito": {
+            "type": "string"
+          },
+          "origem": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "premissas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
+    "restricoes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
+    "riscos_tecnicos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "risco",
+          "origem"
+        ],
+        "properties": {
+          "risco": {
+            "type": "string"
+          },
+          "origem": {
+            "type": "string"
+          },
+          "mitigacao": {
+            "type": "string"
+          }
+        }
+      }
+    },
+
+    "lacunas_identificadas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
+    "justificativas_tecnicas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+
+    "status": {
+      "type": "string",
+      "enum": [
+        "CONCLUIDO",
+        "INCOMPLETO"
+      ]
+    }
+  }
+}

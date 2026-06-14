@@ -86,8 +86,9 @@ AGENTES DISPONÍVEIS:
 2. Analista Mercado
 3. Jurisprudencia TCU
 4. Especialista 14.133
-5. Redator ETP
-6. Redator TR
+5. Especialista Tecnico
+6. Redator ETP
+7. Redator TR
 
 REGRAS DE ORQUESTRAÇÃO
 
@@ -99,6 +100,7 @@ Acionar obrigatoriamente:
 2. Analista Mercado
 3. Jurisprudencia TCU
 4. Especialista 14.133
+5. Especialista Tecnico
 
 Quando o tipo_documento for TR:
 
@@ -108,6 +110,7 @@ Acionar obrigatoriamente:
 2. Analista Mercado
 3. Jurisprudencia TCU
 4. Especialista 14.133
+5. Especialista Tecnico
 
 Não omitir agentes obrigatórios.
 

@@ -1,377 +1,398 @@
 {
-    "type": "object",
-    "required": [
-        "objeto_analisado",
-        "categoria_contratacao",
-        "jurisprudencias_relevantes",
-        "teses_aplicaveis",
-        "riscos_identificados",
-        "boas_praticas",
-        "recomendacoes_para_etp",
-        "recomendacoes_para_tr",
-        "alertas_controle_externo",
-        "nivel_confianca",
-        "nivel_evidencia",
-        "palavras_chaves",
-        "status_pesquisa",
-        "justificativa_status",
-        "conclusao_executiva",
-        "fonte_consultada",
-        "indicador_alucinacao"
-    ],
-    "properties": {
+  "type": "object",
+  "additionalProperties": false,
+  
+  "required": [
+  "objeto_analisado",
+  "status_pesquisa"
+  ],
+  
+  "properties": {
+  
 
-        "objeto_analisado": {
-            "type": "string"
+  "objeto_analisado": {
+    "type": "string",
+    "minLength": 1
+  },
+  
+  "status_pesquisa": {
+    "type": "string",
+    "enum": [
+      "SUCESSO",
+      "SEM_EVIDENCIA"
+    ]
+  },
+  
+  "categoria_contratacao": {
+    "type": "string"
+  },
+  
+  "jurisprudencias_relevantes": {
+    "type": "array",
+    "items": {
+      "type": "object",
+      "additionalProperties": false,
+  
+      "required": [
+        "acordao",
+        "colegiado",
+        "ano",
+        "tema",
+        "resumo",
+        "link_referencia",
+        "link_verificado",
+        "aplicabilidade",
+        "relevancia",
+        "tipo_fonte",
+        "peso_recomendacao",
+        "fonte_verificada"
+      ],
+  
+      "properties": {
+  
+        "acordao": {
+          "type": "string",
+          "minLength": 1
         },
-
-        "categoria_contratacao": {
-            "type": "string"
+  
+        "colegiado": {
+          "type": "string",
+          "enum": [
+            "Plenario",
+            "Primeira Camara",
+            "Segunda Camara",
+            "Nao Informado"
+          ]
         },
-
-        "jurisprudencias_relevantes": {
-            "type": "array",
-            "minItems": 0,
-            "items": {
-                "type": "object",
-                "required": [
-                    "acordao",
-                    "colegiado",
-                    "ano",
-                    "tema",
-                    "resumo",
-                    "link_referencia",
-                    "link_verificado",
-                    "aplicabilidade",
-                    "relevancia",
-                    "tipo_fonte",
-                    "peso_recomendacao", 
-                    "fonte_verificada"
-                ],
-                "properties": {
-
-                    "acordao": {
-                        "type": "string"
-                    },
-
-                    "colegiado": {
-                        "type": "string",
-                        "enum": [
-                            "Plenario",
-                            "Primeira Camara",
-                            "Segunda Camara",
-                            "Nao Informado"
-                        ]
-                        },
-
-                    "ano": {
-                        "type": "integer",
-                        "minimum": 1990,
-                        "maximum": 2026
-                    },
-
-                    "tema": {
-                        "type": "string"
-                    },
-
-                    "resumo": {
-                        "type": "string"
-                    },
-                    "link_referencia": {
-                        "type": "string",
-                        "format": "uri"
-                    },
-                    "link_verificado": {
-                        "type": "boolean"
-                    },
-
-                    "aplicabilidade": {
-                        "type": "string"
-                    },
-
-                    "relevancia": {
-                        "type": "string",
-                        "enum": [
-                            "Alta",
-                            "Media",
-                            "Baixa"
-                        ]
-                    },
-                    "tipo_fonte": {
-                        "type": "string",
-                        "enum": [
-                            "Acordao",
-                            "Sumula",
-                            "Informativo",
-                            "Manual",
-                            "Referencial"
-                        ]
-                    },
-                    "peso_recomendacao": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 10
-                    },
-                    "fonte_verificada": {
-                        "type": "boolean"
-                    }
-                }
-            }
+  
+        "ano": {
+          "type": "integer",
+          "minimum": 1990,
+          "maximum": 2035
         },
-
-        "teses_aplicaveis": {
-            "type": "array",
-            "minItems" :3,
-            "items": {
-                "type": "object",
-                "required": [
-                    "tese",
-                    "origem",
-                    "impacto",
-                    "justificativa"
-                ],
-                "properties": {
-
-                    "tese": {
-                        "type": "string"
-                    },
-
-                    "origem": {
-                        "type": "string"
-                    },
-
-                    "impacto": {
-                        "type": "string"
-                    },
-
-                    "justificativa": {
-                        "type": "string",
-                        "minLength": 20
-                    }
-                }
-            }
+  
+        "tema": {
+          "type": "string"
         },
-
-        "riscos_identificados": {
-            "type": "array",
-            "minItems": 3,
-            "items": {
-                "type": "object",
-                "required": [
-                    "risco",
-                    "origem",
-                    "criticidade",
-                    "descricao",
-                    "mitigacao"
-                ],
-                "properties": {
-
-                    "risco": {
-                        "type": "string"
-                    },
-
-                    "origem": {
-                        "type": "string"
-                    },
-
-                   "criticidade": {
-                        "type": "string",
-                        "enum": [
-                            "Alta",
-                            "Media",
-                            "Baixa"
-                        ]
-                    },
-
-                    "descricao": {
-                        "type": "string"
-                    },
-
-                    "mitigacao": {
-                        "type": "string"
-                    }
-                }
-            }
+  
+        "resumo": {
+          "type": "string"
         },
-
-        "boas_praticas": {
-            "type": "array",
-            "minItems": 3,
-            "items": {
-                "type": "object",
-                "required": [
-                    "pratica",
-                    "origem",
-                    "beneficio",
-                    "criticidade"
-                ],
-                "properties": {
-
-                    "pratica": {
-                        "type": "string"
-                    },
-
-                    "origem": {
-                        "type": "string"
-                    },
-
-                    "beneficio": {
-                        "type": "string"
-                    },
-
-                    "criticidade": {
-                        "type": "string",
-                        "enum": [
-                            "Alta",
-                            "Media",
-                            "Baixa"
-                        ]
-                    }
-                }
-            }
+  
+        "link_referencia": {
+          "type": "string",
+          "format": "uri"
         },
-
-        "recomendacoes_para_etp": {
-            "type": "array",
-            "minItems": 3,
-            "items": {
-                "type": "object",
-                "required": [
-                    "secao",
-                    "recomendacao",
-                    "prioridade"
-                ],
-                "properties": {
-
-                    "secao": {
-                        "type": "string"
-                    },
-
-                    "recomendacao": {
-                        "type": "string"
-                    },
-
-                    "prioridade": {
-                        "type": "string",
-                        "enum": [
-                            "Alta",
-                            "Media",
-                            "Baixa"
-                        ]
-                    }
-                }
-            }
+  
+        "link_verificado": {
+          "type": "boolean"
         },
-
-        "recomendacoes_para_tr": {
-            "type": "array",
-            "minItems": 3,
-            "items": {
-                "type": "object",
-                "required": [
-                    "secao",
-                    "recomendacao",
-                    "prioridade"
-                ],
-                "properties": {
-
-                    "secao": {
-                        "type": "string"
-                    },
-
-                    "recomendacao": {
-                        "type": "string"
-                    },
-
-                    "prioridade": {
-                        "type": "string",
-                        "enum": [
-                            "Alta",
-                            "Media",
-                            "Baixa"
-                        ]
-                    }
-                }
-            }
+  
+        "aplicabilidade": {
+          "type": "string"
         },
-
-        "alertas_controle_externo": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "required": [
-                    "alerta",
-                    "criticidade",
-                    "fundamentacao"
-                ],
-                "properties": {
-
-                    "alerta": {
-                        "type": "string"
-                    },
-
-                    "criticidade": {
-                        "type": "string",
-                        "enum": [
-                            "Alta",
-                            "Media",
-                            "Baixa"
-                        ]
-                    },
-
-                    "fundamentacao": {
-                        "type": "string"
-                    }
-                }
-            }
+  
+        "relevancia": {
+          "type": "string",
+          "enum": [
+            "Alta",
+            "Media",
+            "Baixa"
+          ]
         },
-
-        "nivel_confianca": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 100
+  
+        "tipo_fonte": {
+          "type": "string",
+          "enum": [
+            "Acordao",
+            "Sumula",
+            "Informativo",
+            "Manual",
+            "Referencial"
+          ]
         },
-        "nivel_evidencia": {
-            "type": "string",
-            "enum": [
-                "DIRETA",
-                "ANALOGA",
-                "GENERICA"
-            ]
-            },
-        "palavras_chaves": {
-            "type": "array",
-            "minItems": 3,
-            "items": {
-                "type": "string"
-            }
+  
+        "peso_recomendacao": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
         },
-        "status_pesquisa": {
-            "type": "string",
-            "enum": [
-              "SUCESSO",
-              "SEM_EVIDENCIA"
-            ]
-          },
-        "justificativa_status": {
-            "type": "string",
-            "minLength": 20
-        },
-        "conclusao_executiva": {
-            "type": "string",
-            "minLength": 30
-        },
-        "fonte_consultada": {
-            "type": "string",
-            "enum": [
-                "TCU",
-                "BASE_INTERNA",
-                "TCU_E_BASE_INTERNA",
-                "NAO_LOCALIZADA"
-            ]
-        },
-        "indicador_alucinacao": {
-            "type": "boolean"
+  
+        "fonte_verificada": {
+          "type": "boolean"
         }
+      }
     }
-}
+  },
+  
+  "teses_aplicaveis": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "riscos_identificados": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "boas_praticas": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "recomendacoes_para_etp": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "recomendacoes_para_tr": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "alertas_controle_externo": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "nivel_confianca": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 100
+  },
+  
+  "nivel_evidencia": {
+    "type": "string",
+    "enum": [
+      "DIRETA",
+      "ANALOGA",
+      "GENERICA"
+    ]
+  },
+  
+  "palavras_chaves": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "justificativa_status": {
+    "type": "string"
+  },
+  
+  "conclusao_executiva": {
+    "type": "string"
+  },
+  
+  "fonte_consultada": {
+    "type": "string",
+    "enum": [
+      "TCU",
+      "BASE_INTERNA",
+      "TCU_E_BASE_INTERNA",
+      "NAO_LOCALIZADA"
+    ]
+  },
+  
+  "indicador_alucinacao": {
+    "type": "boolean"
+  },
+  
+  "evidencias_utilizadas": {
+    "type": "array",
+    "items": {
+      "type": "string"
+    }
+  },
+  
+  "grau_aderencia_objeto": {
+    "type": "string",
+    "enum": [
+      "DIRETO",
+      "ANALOGO",
+      "GENERICO",
+      "NAO_IDENTIFICADO"
+    ]
+  },
+  
+  "dependencia_evidencia": {
+    "type": "string",
+    "enum": [
+      "TOTAL",
+      "PARCIAL",
+      "INEXISTENTE"
+    ]
+  }
+  
+  },
+  
+  "oneOf": [
+  {
+    "properties": {
+      "status_pesquisa": {
+        "const": "SEM_EVIDENCIA"
+      }
+    },
+  
+    "required": [
+      "objeto_analisado",
+      "status_pesquisa",
+      "jurisprudencias_relevantes",
+      "teses_aplicaveis",
+      "riscos_identificados",
+      "boas_praticas",
+      "recomendacoes_para_etp",
+      "recomendacoes_para_tr",
+      "alertas_controle_externo",
+      "nivel_confianca",
+      "nivel_evidencia",
+      "fonte_consultada",
+      "indicador_alucinacao",
+      "dependencia_evidencia",
+      "evidencias_utilizadas"
+    ],
+  
+    "properties": {
+  
+      "jurisprudencias_relevantes": {
+        "maxItems": 0
+      },
+  
+      "teses_aplicaveis": {
+        "maxItems": 0
+      },
+  
+      "riscos_identificados": {
+        "maxItems": 0
+      },
+  
+      "boas_praticas": {
+        "maxItems": 0
+      },
+  
+      "recomendacoes_para_etp": {
+        "maxItems": 0
+      },
+  
+      "recomendacoes_para_tr": {
+        "maxItems": 0
+      },
+  
+      "alertas_controle_externo": {
+        "maxItems": 0
+      },
+  
+      "evidencias_utilizadas": {
+        "maxItems": 0
+      },
+  
+      "nivel_confianca": {
+        "maximum": 40
+      },
+  
+      "nivel_evidencia": {
+        "const": "GENERICA"
+      },
+  
+      "fonte_consultada": {
+        "const": "NAO_LOCALIZADA"
+      },
+  
+      "dependencia_evidencia": {
+        "const": "INEXISTENTE"
+      },
+  
+      "grau_aderencia_objeto": {
+        "const": "NAO_IDENTIFICADO"
+      }
+    }
+  },
+  
+  {
+    "properties": {
+      "status_pesquisa": {
+        "const": "SUCESSO"
+      }
+    },
+  
+    "required": [
+      "objeto_analisado",
+      "categoria_contratacao",
+      "jurisprudencias_relevantes",
+      "teses_aplicaveis",
+      "riscos_identificados",
+      "boas_praticas",
+      "recomendacoes_para_etp",
+      "recomendacoes_para_tr",
+      "alertas_controle_externo",
+      "nivel_confianca",
+      "nivel_evidencia",
+      "palavras_chaves",
+      "justificativa_status",
+      "conclusao_executiva",
+      "fonte_consultada",
+      "indicador_alucinacao",
+      "evidencias_utilizadas",
+      "grau_aderencia_objeto",
+      "dependencia_evidencia"
+    ],
+  
+    "properties": {
+  
+      "jurisprudencias_relevantes": {
+        "minItems": 1
+      },
+  
+      "teses_aplicaveis": {
+        "minItems": 1
+      },
+  
+      "recomendacoes_para_etp": {
+        "minItems": 1
+      },
+  
+      "recomendacoes_para_tr": {
+        "minItems": 1
+      },
+  
+      "evidencias_utilizadas": {
+        "minItems": 1
+      },
+  
+      "nivel_confianca": {
+        "minimum": 60
+      },
+  
+      "dependencia_evidencia": {
+        "enum": [
+          "TOTAL",
+          "PARCIAL"
+        ]
+      },
+  
+      "grau_aderencia_objeto": {
+        "enum": [
+          "DIRETO",
+          "ANALOGO"
+        ]
+      }
+    }
+  }
+
+  
+  ]
+  }
+  

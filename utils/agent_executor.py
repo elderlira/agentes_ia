@@ -4,6 +4,7 @@ from ollama_client import generate
 
 from utils.json_parser import extrair_json
 from validators.schema_validator import SchemaValidator
+from validators.jurisprudencia_validator import validar_jurisprudencia
 
 
 class AgentExecutor:
@@ -12,6 +13,7 @@ class AgentExecutor:
     def executar(
         prompt,
         schema_path,
+        objeto_original=None,
         tentativas=3
     ):
 
@@ -71,8 +73,40 @@ REGRAS:
 
                 SchemaValidator.validar(
                     dados,
-                    str(schema_path)
+                    str(schema_path),
                 )
+
+                if objeto_original and "objeto_analisado" in dados:
+
+                    resposta_objeto = (
+                        dados["objeto_analisado"]
+                        .strip()
+                        .lower()
+                    )
+
+                    objeto_referencia = (
+                        objeto_original
+                        .strip()
+                        .lower()
+                    )
+
+                    if resposta_objeto != objeto_referencia:
+
+                        raise Exception(
+                            f"""
+                        OBJETO_ALTERADO
+
+                        O campo objeto_analisado deve ser exatamente:
+
+                        {objeto_original}
+
+                        Valor retornado:
+
+                        {dados['objeto_analisado']}
+
+                        Retorne novamente utilizando exatamente o texto informado.
+                        """
+                        )
 
                 print("\n===== JSON VALIDADO =====\n")
 
@@ -112,6 +146,13 @@ RESPOSTA ANTERIOR:
 {resposta}
 
 CORRIJA O JSON.
+
+IMPORTANTE:
+
+Se existir o campo objeto_analisado,
+ele deve conter exatamente:
+
+{objeto_original}
 
 REGRAS:
 
