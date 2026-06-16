@@ -4,7 +4,6 @@ from ollama_client import generate
 
 from utils.json_parser import extrair_json
 from validators.schema_validator import SchemaValidator
-from validators.jurisprudencia_validator import validar_jurisprudencia
 
 
 class AgentExecutor:
@@ -16,7 +15,6 @@ class AgentExecutor:
         objeto_original=None,
         tentativas=3
     ):
-
         schema_path = Path(schema_path)
 
         with open(
@@ -26,7 +24,38 @@ class AgentExecutor:
         ) as arquivo:
             schema_json = arquivo.read()
 
-        prompt_base = f"""
+        # --------------------------------------------------
+        # BLOCO DE ANCORAGEM DO OBJETO
+        # Montado uma única vez e repetido em TODA tentativa.
+        # Modelos locais tendem a "esquecer" o objeto quando
+        # recebem mensagens longas de erro. Ancorá-lo no topo
+        # e no rodapé do prompt reduz drasticamente a deriva.
+        # --------------------------------------------------
+
+        if objeto_original:
+            ancora_objeto = f"""
+╔══════════════════════════════════════════════════╗
+  OBJETO DA CONTRATAÇÃO — LEIA ANTES DE RESPONDER
+╚══════════════════════════════════════════════════╝
+
+{objeto_original}
+
+REGRA ABSOLUTA:
+O campo objeto_analisado deve conter EXATAMENTE
+o texto acima. Copie letra por letra.
+Não resuma. Não substitua. Não generalize.
+
+══════════════════════════════════════════════════
+"""
+        else:
+            ancora_objeto = ""
+
+        # --------------------------------------------------
+        # PROMPT BASE
+        # Objeto ancorado no topo + instruções + schema.
+        # --------------------------------------------------
+
+        prompt_base = f"""{ancora_objeto}
 {prompt}
 
 =========================
@@ -37,7 +66,7 @@ O JSON retornado DEVE obedecer exatamente ao schema abaixo.
 
 {schema_json}
 
-REGRAS:
+REGRAS DE FORMATAÇÃO:
 
 - Retorne exclusivamente JSON.
 - Não utilize markdown.
@@ -47,11 +76,11 @@ REGRAS:
 - Não altere nomes de campos.
 - Todos os campos obrigatórios devem ser preenchidos.
 - O JSON deve ser compatível com o schema informado.
-"""
+{ancora_objeto}"""
 
         prompt_atual = prompt_base
-
         ultimo_erro = None
+        ultima_resposta = None
 
         for tentativa in range(tentativas):
 
@@ -60,56 +89,27 @@ REGRAS:
             )
 
             resposta = generate(prompt_atual)
+            ultima_resposta = resposta
 
             print("\n===== RESPOSTA BRUTA =====\n")
             print(resposta)
 
             try:
-
                 dados = extrair_json(resposta)
 
                 print("\n===== JSON EXTRAIDO =====\n")
                 print(dados)
 
+                # Validação de schema + semântica (inclui
+                # jurisprudencia_validator quando aplicável).
+                # Ponto único de validação — sem duplicação.
                 SchemaValidator.validar(
                     dados,
                     str(schema_path),
+                    objeto_original=objeto_original,
                 )
 
-                if objeto_original and "objeto_analisado" in dados:
-
-                    resposta_objeto = (
-                        dados["objeto_analisado"]
-                        .strip()
-                        .lower()
-                    )
-
-                    objeto_referencia = (
-                        objeto_original
-                        .strip()
-                        .lower()
-                    )
-
-                    if resposta_objeto != objeto_referencia:
-
-                        raise Exception(
-                            f"""
-                        OBJETO_ALTERADO
-
-                        O campo objeto_analisado deve ser exatamente:
-
-                        {objeto_original}
-
-                        Valor retornado:
-
-                        {dados['objeto_analisado']}
-
-                        Retorne novamente utilizando exatamente o texto informado.
-                        """
-                        )
-
                 print("\n===== JSON VALIDADO =====\n")
-
                 return dados
 
             except Exception as erro:
@@ -117,45 +117,46 @@ REGRAS:
                 ultimo_erro = erro
 
                 print(
-                    f"""
-Tentativa: {tentativa + 1}
-
-Tipo do erro:
-{type(erro).__name__}
-
-Mensagem:
-{erro}
-"""
+                    f"\nTentativa: {tentativa + 1}"
+                    f"\n\nTipo do erro:\n{type(erro).__name__}"
+                    f"\n\nMensagem:\n{erro}\n"
                 )
 
-                prompt_atual = f"""
+                # ----------------------------------------------
+                # PROMPT DE RETRY
+                # O objeto é ancorado novamente no topo e no
+                # rodapé. O erro é descrito com precisão.
+                # A resposta anterior é incluída para que o
+                # modelo saiba exatamente o que corrigir.
+                # ----------------------------------------------
+
+                prompt_atual = f"""{ancora_objeto}
 {prompt_base}
 
-=========================
-ERRO DE VALIDAÇÃO
-=========================
+╔══════════════════════════════════════════════════╗
+  ERRO DE VALIDAÇÃO — CORRIJA E RESPONDA NOVAMENTE
+╚══════════════════════════════════════════════════╝
 
-Sua resposta anterior não atende ao schema.
-
-ERRO:
+ERRO IDENTIFICADO:
 
 {erro}
 
-RESPOSTA ANTERIOR:
+SUA RESPOSTA ANTERIOR (com o erro):
 
-{resposta}
+{ultima_resposta}
 
-CORRIJA O JSON.
+O QUE VOCÊ DEVE FAZER:
 
-IMPORTANTE:
+1. Leia o erro acima com atenção.
+2. Identifique o campo ou valor incorreto.
+3. Corrija APENAS o que está errado.
+4. Mantenha todos os outros campos inalterados.
+5. Retorne o JSON completo e corrigido.
 
-Se existir o campo objeto_analisado,
-ele deve conter exatamente:
-
-{objeto_original}
+LEMBRETE CRÍTICO:
+{f'O campo objeto_analisado deve ser: {objeto_original}' if objeto_original else ''}
 
 REGRAS:
-
 - Retorne exclusivamente JSON.
 - Não utilize markdown.
 - Não utilize comentários.
@@ -164,14 +165,10 @@ REGRAS:
 - Não remova campos obrigatórios.
 - Não crie campos extras.
 - Obedeça integralmente o schema.
-"""
+{ancora_objeto}"""
 
         raise Exception(
-            f"""
-Não foi possível validar o JSON após {tentativas} tentativas.
-
-Último erro:
-
-{ultimo_erro}
-"""
+            f"\nNão foi possível validar o JSON "
+            f"após {tentativas} tentativas."
+            f"\n\nÚltimo erro:\n\n{ultimo_erro}\n"
         )

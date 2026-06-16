@@ -1,114 +1,114 @@
 from prompt_loader import load_prompt
-
 from utils.agent_executor import AgentExecutor
 
 
 class JurisprudenciaTCU:
 
-    SCHEMA = (
-        "schemas/jurisprudencia_tcu_schema.json"
-    )
+    SCHEMA = "schemas/jurisprudencia_tcu_schema.json"
 
     def executar(self, contexto):
 
-        prompt = load_prompt(
-            "jurisprudencia_tcu"
-        )
+        prompt_sistema = load_prompt("jurisprudencia_tcu")
 
-        objeto_original = contexto.get(
-            "objeto_original"
-        )
+        # --------------------------------------------------
+        # Extração do objeto
+        # --------------------------------------------------
+
+        objeto_original = contexto.get("objeto_original")
 
         if not objeto_original:
-
             objeto_original = contexto.get(
                 "objeto_contratacao"
             )
 
         if not objeto_original:
-
             raise Exception(
                 "OBJETO_ORIGINAL_NAO_LOCALIZADO"
             )
-        
+
+        # --------------------------------------------------
+        # Contexto do Scout (enriquece a pesquisa)
+        # --------------------------------------------------
+
         palavras_chave = []
         categoria = ""
         subcategorias = []
 
         if "scout" in contexto:
+            scout = contexto["scout"]
+            palavras_chave = scout.get("palavras_chave", [])
+            categoria = scout.get("categoria", "")
+            subcategorias = scout.get("subcategorias", [])
 
-            palavras_chave = contexto["scout"].get(
-                "palavras_chave",
-                []
-            )
+        palavras_formatadas = (
+            "\n".join(f"- {p}" for p in palavras_chave)
+            if palavras_chave
+            else "(não informado)"
+        )
 
-            categoria = contexto["scout"].get(
-                "categoria",
-                ""
-            )
+        subcategorias_formatadas = (
+            "\n".join(f"- {s}" for s in subcategorias)
+            if subcategorias
+            else "(não informado)"
+        )
 
-            subcategorias = contexto["scout"].get(
-                "subcategorias",
-                []
-            )
+        # --------------------------------------------------
+        # Prompt final
+        # O objeto é repetido 3 vezes em posições
+        # estratégicas: abertura, meio e fechamento.
+        # Isso reduz a deriva em modelos locais.
+        # --------------------------------------------------
 
         prompt_final = f"""
-{prompt}
+╔══════════════════════════════════════════════════════╗
+  OBJETO DA CONTRATAÇÃO — REFERÊNCIA PRINCIPAL
+╚══════════════════════════════════════════════════════╝
+
+{objeto_original}
+
+O campo objeto_analisado deve conter EXATAMENTE o texto
+acima. Copie letra por letra. Não altere nada.
+
+══════════════════════════════════════════════════════
+
+{prompt_sistema}
+
+══════════════════════════════════════════════════════
+DADOS PARA PESQUISA
+══════════════════════════════════════════════════════
 
 OBJETO DA CONTRATAÇÃO:
-
 {objeto_original}
-
-ATENÇÃO CRÍTICA:
-
-O campo objeto_analisado deve conter
-EXATAMENTE o texto abaixo:
-
-{objeto_original}
-
-Copie literalmente o texto.
-
-Não altere palavras.
-Não resuma.
-Não substitua termos.
-Não generalize.
 
 CATEGORIA IDENTIFICADA:
-
-{categoria}
+{categoria if categoria else "(não informado)"}
 
 SUBCATEGORIAS:
-
-{subcategorias}
+{subcategorias_formatadas}
 
 PALAVRAS-CHAVE:
+{palavras_formatadas}
 
-{palavras_chave}
+══════════════════════════════════════════════════════
+CONFIRMAÇÃO FINAL ANTES DE RESPONDER
+══════════════════════════════════════════════════════
 
-REGRAS OBRIGATÓRIAS:
+Objeto que você está analisando:
 
-1. Analise exclusivamente o objeto informado.
+{objeto_original}
 
-2. Caso não encontre jurisprudência,
-retorne SEM_EVIDENCIA.
-
-3. Mesmo em SEM_EVIDENCIA,
-o campo objeto_analisado deve permanecer
-idêntico ao texto informado acima.
+Copie este texto literalmente no campo objeto_analisado.
+Não altere nenhuma palavra, acento ou pontuação.
 """
 
         dados = AgentExecutor.executar(
             prompt=prompt_final,
             schema_path=self.SCHEMA,
-            objeto_original=objeto_original
+            objeto_original=objeto_original,
         )
 
-        dados["fonte"] = (
-            "Jurisprudencia TCU"
-        )
-
+        dados["fonte"] = "Jurisprudencia TCU"
         dados["versao_agente"] = "1.0"
-
         dados["status"] = "concluido"
 
         return dados

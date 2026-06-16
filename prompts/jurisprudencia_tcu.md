@@ -66,7 +66,6 @@ objeto_analisado
 PESQUISA HIERÁRQUICA OBRIGATÓRIA
 ================================
 
-
 A busca deve ocorrer na seguinte ordem:
 
 NÍVEL 1
@@ -346,3 +345,140 @@ PRIORIDADE MÁXIMA
 4. Utilizar categoria, subcategorias e palavras-chave para ampliar a busca.
 
 5. Somente retornar SEM_EVIDENCIA quando não houver jurisprudência direta, análoga ou temática verificável.
+
+==================================================================
+VALORES OBRIGATÓRIOS DOS CAMPOS ENUM
+=====================================
+
+ATENÇÃO: copie os valores abaixo exatamente como estão escritos.
+Não use acentos. Não altere maiúsculas ou minúsculas.
+Qualquer desvio causará erro de validação.
+
+Campo: colegiado
+Valores aceitos (use exatamente assim):
+  "Plenario"
+  "Primeira Camara"
+  "Segunda Camara"
+  "Nao Informado"
+
+Campo: relevancia
+Valores aceitos (use exatamente assim):
+  "Alta"
+  "Media"
+  "Baixa"
+
+Campo: tipo_fonte
+Valores aceitos (use exatamente assim):
+  "Acordao"
+  "Sumula"
+  "Informativo"
+  "Manual"
+  "Referencial"
+
+Campo: nivel_evidencia
+Valores aceitos (use exatamente assim):
+  "DIRETA"
+  "ANALOGA"
+  "GENERICA"
+
+Campo: grau_aderencia_objeto
+Valores aceitos (use exatamente assim):
+  "DIRETO"
+  "ANALOGO"
+  "GENERICO"
+  "NAO_IDENTIFICADO"
+
+Campo: dependencia_evidencia
+Valores aceitos (use exatamente assim):
+  "TOTAL"
+  "PARCIAL"
+  "INEXISTENTE"
+
+Campo: fonte_consultada
+Valores aceitos (use exatamente assim):
+  "TCU"
+  "BASE_INTERNA"
+  "TCU_E_BASE_INTERNA"
+  "NAO_LOCALIZADA"
+
+Campo: status_pesquisa
+Valores aceitos (use exatamente assim):
+  "SUCESSO"
+  "SEM_EVIDENCIA"
+
+==================================================================
+EXEMPLO DE SAÍDA VÁLIDA — STATUS SUCESSO
+=========================================
+
+{
+  "objeto_analisado": "Sistema de contagem de pessoas por inteligência artificial",
+  "status_pesquisa": "SUCESSO",
+  "categoria_contratacao": "Tecnologia da Informação",
+  "jurisprudencias_relevantes": [
+    {
+      "acordao": "Acórdão 2471/2008",
+      "colegiado": "Plenario",
+      "ano": 2008,
+      "tema": "Contratação de soluções de TI",
+      "resumo": "O TCU estabeleceu que contratações de soluções de TI devem ser precedidas de estudos técnicos que demonstrem a viabilidade da solução, incluindo análise de riscos e alternativas.",
+      "link_referencia": "https://pesquisa.apps.tcu.gov.br/resultado/acordao-completo/2471%252F2008",
+      "link_verificado": true,
+      "aplicabilidade": "Aplicável ao objeto pois sistemas de contagem por IA enquadram-se como soluções de TI, exigindo ETP detalhado com análise de viabilidade técnica e econômica.",
+      "relevancia": "Alta",
+      "tipo_fonte": "Acordao",
+      "peso_recomendacao": 9,
+      "fonte_verificada": true
+    }
+  ],
+  "teses_aplicaveis": [
+    "Contratações de TI devem ser precedidas de ETP que demonstre viabilidade técnica e econômica (Acórdão 2471/2008-TCU-Plenário)."
+  ],
+  "riscos_identificados": [
+    "Ausência de ETP adequado pode ensejar questionamentos do TCU sobre a escolha da solução."
+  ],
+  "boas_praticas": [
+    "Realizar análise comparativa de soluções disponíveis no mercado antes da contratação."
+  ],
+  "recomendacoes_para_etp": [
+    "Demonstrar viabilidade técnica e econômica da solução escolhida com base em benchmarks de mercado."
+  ],
+  "recomendacoes_para_tr": [
+    "Incluir métricas objetivas de desempenho e critérios de aceite mensuráveis."
+  ],
+  "alertas_controle_externo": [
+    "TCU tem determinado devolução de valores em contratos de TI sem ETP adequado."
+  ],
+  "nivel_confianca": 75,
+  "nivel_evidencia": "ANALOGA",
+  "palavras_chaves": ["TI", "ETP", "viabilidade", "solução tecnológica"],
+  "justificativa_status": "Foram identificados acórdãos do TCU sobre contratação de soluções de TI com aplicabilidade análoga ao objeto, dado que sistemas de contagem por IA são classificados como soluções de tecnologia da informação.",
+  "conclusao_executiva": "O TCU possui jurisprudência consolidada sobre contratações de TI que se aplica analogamente ao objeto. Os principais requisitos são: ETP detalhado, análise de viabilidade, métricas de desempenho e conformidade com normas de privacidade de dados.",
+  "fonte_consultada": "TCU",
+  "indicador_alucinacao": false,
+  "evidencias_utilizadas": ["Acórdão 2471/2008-TCU-Plenário"],
+  "grau_aderencia_objeto": "ANALOGO",
+  "dependencia_evidencia": "PARCIAL"
+}
+
+==================================================================
+EXEMPLO DE SAÍDA VÁLIDA — STATUS SEM_EVIDENCIA
+===============================================
+
+{
+  "objeto_analisado": "Sistema de contagem de pessoas por inteligência artificial",
+  "status_pesquisa": "SEM_EVIDENCIA",
+  "jurisprudencias_relevantes": [],
+  "teses_aplicaveis": [],
+  "riscos_identificados": [],
+  "boas_praticas": [],
+  "recomendacoes_para_etp": [],
+  "recomendacoes_para_tr": [],
+  "alertas_controle_externo": [],
+  "evidencias_utilizadas": [],
+  "nivel_confianca": 20,
+  "nivel_evidencia": "GENERICA",
+  "fonte_consultada": "NAO_LOCALIZADA",
+  "indicador_alucinacao": false,
+  "dependencia_evidencia": "INEXISTENTE",
+  "grau_aderencia_objeto": "NAO_IDENTIFICADO"
+}
