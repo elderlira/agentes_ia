@@ -1,0 +1,76 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+  
+    "required": [
+      "categoria_contratacao",
+      "teses_aplicaveis",
+      "riscos_identificados",
+      "boas_praticas",
+      "recomendacoes_para_etp",
+      "recomendacoes_para_tr",
+      "alertas_controle_externo",
+      "palavras_chaves",
+      "justificativa_status",
+      "conclusao_executiva"
+    ],
+  
+    "properties": {
+  
+      "categoria_contratacao": {
+        "type": "string",
+        "minLength": 1
+      },
+  
+      "teses_aplicaveis": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+  
+      "riscos_identificados": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+  
+      "boas_praticas": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+  
+      "recomendacoes_para_etp": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+  
+      "recomendacoes_para_tr": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+  
+      "alertas_controle_externo": {
+        "type": "array",
+        "items": { "type": "string" }
+      },
+  
+      "palavras_chaves": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      },
+  
+      "justificativa_status": {
+        "type": "string",
+        "minLength": 1
+      },
+  
+      "conclusao_executiva": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }

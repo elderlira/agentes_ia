@@ -1,20 +1,14 @@
 """
-TCU Service — Camada 2
+TCU Service — v3.0
 
-Realiza buscas reais na API pública do TCU:
-  https://dados-abertos.apps.tcu.gov.br/api/acordao/recupera-acordaos
-
-A API retorna acórdãos paginados por índice (sem busca textual).
-Estratégia:
-  1. Buscar lotes de acórdãos recentes por página
-  2. Filtrar localmente por relevância (palavras-chave no título/sumário)
-  3. Retornar os 3 mais relevantes (configurável)
-
-Busca hierárquica em 4 níveis:
-  Nível 1 → palavras-chave específicas do objeto
-  Nível 2 → subcategorias identificadas pelo Scout
-  Nível 3 → categoria + termos do objeto
-  Nível 4 → termos genéricos de contratação TI
+Correção:
+  'sequence item 1: expected str instance, NoneType found'
+  
+  O erro ocorria em _pontuar() ao concatenar campos que podem
+  ser None (titulo, sumario). Corrigido com fallback para "".
+  
+  Também corrigido em _formatar() para garantir que nenhum
+  campo None quebre a montagem do dict.
 """
 
 import re
@@ -29,46 +23,48 @@ TCU_API_BASE = (
     "/api/acordao/recupera-acordaos"
 )
 
-TCU_PESQUISA_BASE = (
-    "https://pesquisa.apps.tcu.gov.br"
-    "/resultado/acordao-completo"
-)
-
 TIMEOUT_SEGUNDOS = 10
 MAX_ACORDAOS_RETORNO = 3
 LOTE_BUSCA = 50
+MAX_PAGINAS = 3
 
 MAPA_COLEGIADO = {
-    "plenário": "Plenario",
-    "plenario": "Plenario",
+    "plenário":      "Plenario",
+    "plenario":      "Plenario",
     "primeira câmara": "Primeira Camara",
     "primeira camara": "Primeira Camara",
-    "segunda câmara": "Segunda Camara",
-    "segunda camara": "Segunda Camara",
+    "segunda câmara":  "Segunda Camara",
+    "segunda camara":  "Segunda Camara",
 }
 
 
-def _normalizar_colegiado(valor: str) -> str:
+def _str(valor) -> str:
+    """Converte qualquer valor para str segura (None → '')."""
+    return str(valor) if valor is not None else ""
+
+
+def _normalizar_colegiado(valor) -> str:
     if not valor:
         return "Nao Informado"
-    return MAPA_COLEGIADO.get(valor.strip().lower(), "Nao Informado")
+    return MAPA_COLEGIADO.get(_str(valor).strip().lower(), "Nao Informado")
 
 
-def _pontuar_relevancia(acordao: dict, palavras: list) -> int:
+def _pontuar(acordao: dict, palavras: list) -> int:
+    # Usa _str() para evitar TypeError com campos None
     texto = " ".join([
-        acordao.get("titulo", ""),
-        acordao.get("sumario", ""),
+        _str(acordao.get("titulo")),
+        _str(acordao.get("sumario")),
     ]).lower()
-    return sum(1 for p in palavras if p.lower() in texto)
+    return sum(1 for p in palavras if _str(p).lower() in texto)
 
 
-def _formatar_acordao(acordao: dict, score: int) -> dict:
-    numero = acordao.get("numeroAcordao", "")
-    ano = acordao.get("anoAcordao", "")
-    colegiado_raw = acordao.get("colegiado", "")
-    colegiado = _normalizar_colegiado(colegiado_raw)
+def _formatar(acordao: dict, score: int) -> dict:
+    numero      = _str(acordao.get("numeroAcordao"))
+    ano         = _str(acordao.get("anoAcordao"))
+    colegiado_raw = _str(acordao.get("colegiado"))
+    colegiado   = _normalizar_colegiado(colegiado_raw)
 
-    nome_acordao = (
+    nome = (
         f"Acórdão {numero}/{ano}-TCU-"
         f"{colegiado_raw or 'Plenário'}"
     )
@@ -78,9 +74,7 @@ def _formatar_acordao(acordao: dict, score: int) -> dict:
     except (ValueError, TypeError):
         ano_int = 2000
 
-    url_acordao = acordao.get("urlAcordao", "")
-    if not url_acordao:
-        url_acordao = f"{TCU_PESQUISA_BASE}/{numero}%252F{ano}"
+    url = _str(acordao.get("urlAcordao"))
 
     if score >= 3:
         relevancia = "Alta"
@@ -89,32 +83,36 @@ def _formatar_acordao(acordao: dict, score: int) -> dict:
     else:
         relevancia = "Baixa"
 
-    sumario = acordao.get("sumario", "") or acordao.get("titulo", "")
+    # Sumário com fallback para título
+    sumario = _str(acordao.get("sumario")) or _str(acordao.get("titulo"))
 
     return {
-        "acordao": nome_acordao,
-        "colegiado": colegiado,
-        "ano": ano_int,
-        "tema": acordao.get("titulo", ""),
-        "resumo": sumario[:800],
-        "link_referencia": url_acordao,
-        "link_verificado": bool(url_acordao),
-        "aplicabilidade": "Indireta",
-        "relevancia": relevancia,
-        "tipo_fonte": "Acordao",
+        "acordao":          nome,
+        "colegiado":        colegiado,
+        "ano":              ano_int,
+        "tema":             _str(acordao.get("titulo")),
+        "resumo":           sumario[:800],
+        "link_referencia":  url or f"https://pesquisa.apps.tcu.gov.br/resultado/acordao-completo/{numero}%252F{ano}",
+        "link_verificado":  bool(url),
+        "aplicabilidade":   "Indireta",
+        "relevancia":       relevancia,
+        "tipo_fonte":       "Acordao",
         "peso_recomendacao": min(10, max(1, score + 5)),
         "fonte_verificada": True,
     }
 
 
-def _buscar_por_palavras_chave(
-    palavras: list,
-    max_resultados: int = MAX_ACORDAOS_RETORNO,
-) -> list:
+def _buscar_nivel(palavras: list, max_resultados: int) -> tuple:
+    """
+    Retorna (resultados, erro_str | None).
+    Erro de rede → ([], mensagem).
+    Sem resultado → ([], None).
+    Com resultado → (lista, None).
+    """
     candidatos = []
     inicio = 1
 
-    for pagina in range(3):
+    for pagina in range(1, MAX_PAGINAS + 1):
         try:
             resp = requests.get(
                 TCU_API_BASE,
@@ -126,20 +124,19 @@ def _buscar_por_palavras_chave(
             acordaos = resp.json()
 
         except requests.exceptions.Timeout:
-            logger.warning(f"TCU API: timeout (página {pagina + 1})")
-            break
+            return [], f"timeout pagina {pagina}"
         except requests.exceptions.ConnectionError as e:
-            logger.warning(f"TCU API: conexão falhou: {e}")
-            break
+            return [], f"conexao falhou: {e}"
+        except requests.exceptions.HTTPError as e:
+            return [], f"HTTP error: {e}"
         except Exception as e:
-            logger.warning(f"TCU API: erro: {e}")
-            break
+            return [], f"erro inesperado: {e}"
 
         if not acordaos:
             break
 
         for a in acordaos:
-            score = _pontuar_relevancia(a, palavras)
+            score = _pontuar(a, palavras)
             if score > 0:
                 candidatos.append((score, a))
 
@@ -147,10 +144,7 @@ def _buscar_por_palavras_chave(
         time.sleep(0.3)
 
     candidatos.sort(key=lambda x: x[0], reverse=True)
-    return [
-        _formatar_acordao(a, s)
-        for s, a in candidatos[:max_resultados]
-    ]
+    return [_formatar(a, s) for s, a in candidatos[:max_resultados]], None
 
 
 def buscar_jurisprudencia(
@@ -161,14 +155,7 @@ def buscar_jurisprudencia(
     max_resultados: int = MAX_ACORDAOS_RETORNO,
 ) -> dict:
     """
-    Busca hierárquica de jurisprudência do TCU.
-
-    Retorna:
-      acordaos        : lista formatada para o schema
-      nivel_busca     : nível hierárquico onde encontrou
-      total_encontrado: quantidade de resultados
-      status          : SUCESSO | SEM_RESULTADO | ERRO_API
-      erro            : mensagem de erro (se houver)
+    Busca hierárquica — erro em um nível não aborta os demais.
     """
     termos_objeto = [
         t for t in re.sub(r"[^\w\s]", " ", objeto).split()
@@ -176,50 +163,53 @@ def buscar_jurisprudencia(
     ]
 
     grupos = [
-        palavras_chave,
-        subcategorias,
-        ([categoria] + termos_objeto[:3]) if categoria else termos_objeto[:3],
-        ["contratação", "tecnologia", "software", "sistema", "licitação"],
+        (1, palavras_chave),
+        (2, subcategorias),
+        (3, ([categoria] + termos_objeto[:3]) if categoria else termos_objeto[:3]),
+        (4, ["contratação", "tecnologia", "software", "sistema"]),
     ]
 
-    for nivel, palavras in enumerate(grupos, start=1):
-        validas = [p for p in palavras if p and len(p) > 2]
+    erros = []
+
+    for nivel, palavras in grupos:
+        validas = [_str(p) for p in palavras if p and len(_str(p)) > 2]
         if not validas:
             continue
 
-        logger.info(
-            f"TCU: buscando nível {nivel} — {validas}"
-        )
+        logger.info(f"TCU: nivel {nivel} — {validas}")
 
-        try:
-            resultados = _buscar_por_palavras_chave(
-                validas, max_resultados
-            )
-        except Exception as e:
-            return {
-                "acordaos": [],
-                "nivel_busca": nivel,
-                "total_encontrado": 0,
-                "status": "ERRO_API",
-                "erro": str(e),
-            }
+        resultados, erro = _buscar_nivel(validas, max_resultados)
+
+        if erro:
+            erros.append(f"Nivel {nivel}: {erro}")
+            logger.warning(f"TCU: nivel {nivel} com erro — {erro}")
+            continue
 
         if resultados:
-            logger.info(
-                f"TCU: {len(resultados)} resultado(s) no nível {nivel}"
-            )
+            logger.info(f"TCU: {len(resultados)} resultado(s) no nivel {nivel}")
             return {
-                "acordaos": resultados,
-                "nivel_busca": nivel,
+                "acordaos":        resultados,
+                "nivel_busca":     nivel,
                 "total_encontrado": len(resultados),
-                "status": "SUCESSO",
-                "erro": None,
+                "status":          "SUCESSO",
+                "erro":            None,
             }
 
+        logger.info(f"TCU: nivel {nivel} sem resultados relevantes")
+
+    if erros:
+        return {
+            "acordaos":        [],
+            "nivel_busca":     len(grupos),
+            "total_encontrado": 0,
+            "status":          "ERRO_API",
+            "erro":            " | ".join(erros),
+        }
+
     return {
-        "acordaos": [],
-        "nivel_busca": len(grupos),
+        "acordaos":        [],
+        "nivel_busca":     len(grupos),
         "total_encontrado": 0,
-        "status": "SEM_RESULTADO",
-        "erro": None,
+        "status":          "SEM_RESULTADO",
+        "erro":            None,
     }
