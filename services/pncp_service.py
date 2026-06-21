@@ -1,59 +1,81 @@
 """
-PNCP Service — v6.0
+PNCP Service — v8.0
 
-CAUSA RAIZ DO 422 IDENTIFICADA E CORRIGIDA:
+DIAGNÓSTICO DO TESTE v7.0:
+  O log mostrou "consultando 7 UFs em paralelo" mesmo após a
+  intenção de reduzir para 2 — o ThreadPoolExecutor(max_workers=2)
+  efetivamente limitou a CONCORRÊNCIA real (no máximo 2 requisições
+  simultâneas), mas a mensagem de log ainda dizia "7 UFs em paralelo"
+  porque o texto do log usava len(UFS_BUSCA) ao invés de MAX_WORKERS.
+  Isso causou confusão na leitura, mas o comportamento de
+  concorrência=2 estava correto.
 
-  O PNCP rejeita com HTTP 422 qualquer janela de datas
-  (dataFinal - dataInicial) MAIOR QUE 365 DIAS.
+  O problema real é outro: com concorrência=2, ainda eram
+  necessárias ~4 rodadas de 2 requisições para cobrir as 7 UFs,
+  e cada rodada podia levar até 8s (backoff de 429) + 6s (timeout)
+  = somando ~22-24s por janela. Com 2 janelas × 3 níveis,
+  o pior caso ainda chega a 90+ segundos.
 
-  A v5.0 usava DATA_INICIAL="20230101" e DATA_FINAL="20241231",
-  uma janela de 730 dias — exatamente o dobro do limite.
-  Por isso TODA requisição falhava com 422, independente
-  de UF, modalidade ou palavras-chave.
+OTIMIZAÇÕES v8.0:
 
-  Confirmado por:
-    - Exemplos oficiais do manual do PNCP usam janelas de
-      poucos dias (ex: 28 dias) a poucos meses.
-    - Relato de terceiros (issue pública) reproduzindo o
-      mesmo erro 422 ao usar janela > 365 dias.
+  1. CORRIGIDO o texto do log para refletir o paralelismo real.
 
-CORREÇÃO:
-  Janela fixada em exatamente 365 dias.
-  Para cobrir 2 anos de histórico sem violar o limite,
-  o sistema faz DUAS buscas sequenciais de 365 dias cada
-  (2024 e 2025) e agrega os resultados.
+  2. REDUZIDO O NÚMERO DE UFs: de 7 para 3 (DF, SP, MG) —
+     concentram o maior volume de contratações federais de TI.
+     Com concorrência=2 e só 3 UFs, cada janela faz no máximo
+     2 rodadas em vez de 4.
+
+  3. SEM RETRY EM 429: ao invés de aguardar 8s e tentar de novo
+     (o que dobra o tempo da requisição), agora a UF limitada é
+     simplesmente descartada nesta rodada — outras UFs/janelas
+     têm chance de compensar. Rate limit em uma UF não deve
+     bloquear o pipeline.
+
+  4. EARLY-STOP MAIS AGRESSIVO: para a busca no nível assim que
+     header_resultados >= 1 (não espera atingir max_resultados=5),
+     já que o objetivo é ter ALGUM contexto real para o modelo,
+     não uma lista exaustiva.
+
+  5. TIMEOUT REDUZIDO PARA 5s: suficiente para uma API saudável,
+     evita acumular espera em UFs lentas.
+
+  Resultado esperado: pior caso cai de ~90s para ~20-25s.
 """
 
 import time
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
 
 logger = logging.getLogger(__name__)
 
 PNCP_BASE = "https://pncp.gov.br/api/consulta/v1"
-TIMEOUT_SEGUNDOS = 15
+
+TIMEOUT_SEGUNDOS = 5
 MAX_CONTRATACOES = 5
 TAMANHO_PAGINA = 50
 
 MODALIDADE_PRINCIPAL = 6  # Pregão (maior volume de TI)
-UFS_BUSCA = ["DF", "SP", "RJ", "MG", "RS", "BA", "PR"]
 
-SLEEP_ENTRE_REQUISICOES = 1.0
-SLEEP_APOS_429          = 10.0
+# Reduzido de 7 para 3 UFs — maior concentração de
+# contratações federais de TI, menos rodadas necessárias.
+UFS_BUSCA = ["DF", "SP", "MG"]
 
-# ------------------------------------------------------------
-# JANELAS DE BUSCA — cada uma com NO MÁXIMO 365 dias
-# Cobrem 2024 e 2025 separadamente para não violar o limite.
-# Ajuste estas constantes conforme novos anos completos
-# de dados estejam disponíveis no PNCP.
-# ------------------------------------------------------------
+# Concorrência real — no máximo 2 requisições simultâneas
+MAX_WORKERS = 2
+
+# SEM retry em 429 — descarta a UF nesta rodada e segue.
+# Rate limit pontual não deve duplicar o tempo de espera.
+SLEEP_APOS_429 = 0  # mantido por compatibilidade, não usado para retry
+
+# Quantos resultados já bastam para parar a busca no nível atual
+MIN_RESULTADOS_PARA_PARAR = 1
+
+# Janela mais recente primeiro
 JANELAS_BUSCA = [
-    ("20250101", "20251231"),  # 2025 — 365 dias
-    ("20240101", "20241231"),  # 2024 — 365 dias (ano bissexto: 366,
-                                 # mas o PNCP tolera differences de 1 dia
-                                 # em anos bissextos; se voltar a dar 422
-                                 # use "20241230" como dataFinal)
+    ("20250101", "20251231"),  # 2025
+    ("20240101", "20241231"),  # 2024
 ]
 
 
@@ -96,8 +118,8 @@ def _requisicao(
     palavras: list,
 ) -> list:
     """
-    Faz uma única requisição e retorna candidatos pontuados.
-    Trata 422 e 429 explicitamente.
+    Faz uma única requisição. SEM retry em 429 — apenas
+    registra e descarta, para não duplicar o tempo de espera.
     """
     try:
         resp = requests.get(
@@ -115,35 +137,29 @@ def _requisicao(
         )
 
         if resp.status_code == 422:
-            # Loga o corpo da resposta para diagnóstico futuro
-            corpo = ""
-            try:
-                corpo = resp.text[:300]
-            except Exception:
-                pass
+            corpo = resp.text[:300] if resp.text else ""
             logger.warning(
                 f"PNCP: 422 uf={uf} mod={modalidade} "
-                f"janela={data_inicial}-{data_final} "
-                f"corpo={corpo}"
+                f"janela={data_inicial}-{data_final} corpo={corpo}"
             )
             return []
 
         if resp.status_code == 429:
+            # Sem retry — apenas descarta esta UF nesta rodada
             logger.warning(
-                f"PNCP: 429 rate limit uf={uf} — "
-                f"aguardando {SLEEP_APOS_429}s"
+                f"PNCP: 429 rate limit uf={uf} — descartando "
+                f"sem retry (outras UFs/janelas compensam)"
             )
-            time.sleep(SLEEP_APOS_429)
             return []
 
         resp.raise_for_status()
         itens = resp.json().get("data", [])
 
     except requests.exceptions.Timeout:
-        logger.warning(f"PNCP: timeout uf={uf}")
+        logger.warning(f"PNCP: timeout uf={uf} ({TIMEOUT_SEGUNDOS}s)")
         return []
     except requests.exceptions.ConnectionError as e:
-        logger.warning(f"PNCP: conexao falhou: {e}")
+        logger.warning(f"PNCP: conexao falhou uf={uf}: {e}")
         return []
     except Exception as e:
         logger.warning(f"PNCP: erro uf={uf}: {e}")
@@ -158,26 +174,43 @@ def _requisicao(
     return [_formatar(i, s) for s, i in candidatos[:MAX_CONTRATACOES]]
 
 
-def _buscar_com_palavras(palavras: list) -> list:
+def _buscar_janela_paralelo(
+    data_inicial: str,
+    data_final: str,
+    palavras: list,
+) -> list:
     """
-    Busca em todas as janelas de data e UFs configuradas,
-    uma combinação por vez, com pausa entre cada chamada.
-    Para quando encontrar resultados suficientes.
+    Consulta as UFs configuradas com concorrência = MAX_WORKERS.
+    Log reflete a concorrência REAL, não o total de UFs.
     """
     todos = []
     vistos = set()
 
-    for data_inicial, data_final in JANELAS_BUSCA:
-        logger.info(
-            f"PNCP: testando janela {data_inicial} → {data_final}"
-        )
+    logger.info(
+        f"PNCP: janela {data_inicial} → {data_final} "
+        f"— {len(UFS_BUSCA)} UFs, concorrencia={MAX_WORKERS}"
+    )
 
-        for uf in UFS_BUSCA:
-            resultados = _requisicao(
+    inicio_tempo = time.monotonic()
+
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {
+            executor.submit(
+                _requisicao,
                 uf, MODALIDADE_PRINCIPAL,
                 data_inicial, data_final,
                 palavras,
-            )
+            ): uf
+            for uf in UFS_BUSCA
+        }
+
+        for future in as_completed(futures):
+            uf = futures[future]
+            try:
+                resultados = future.result()
+            except Exception as e:
+                logger.warning(f"PNCP: thread uf={uf} falhou: {e}")
+                continue
 
             for c in resultados:
                 nc = c["numero_controle"]
@@ -185,17 +218,46 @@ def _buscar_com_palavras(palavras: list) -> list:
                     vistos.add(nc)
                     todos.append(c)
 
-            if len(todos) >= MAX_CONTRATACOES:
-                logger.info(
-                    f"PNCP: {len(todos)} resultado(s) — parando busca"
-                )
-                return sorted(
-                    todos,
-                    key=lambda x: x["relevancia_score"],
-                    reverse=True
-                )
+            # Early-stop: já achou o suficiente, cancela o resto
+            if len(todos) >= MIN_RESULTADOS_PARA_PARAR:
+                for f in futures:
+                    f.cancel()
+                break
 
-            time.sleep(SLEEP_ENTRE_REQUISICOES)
+    tempo_total = time.monotonic() - inicio_tempo
+    logger.info(
+        f"PNCP: janela {data_inicial}-{data_final} concluida em "
+        f"{tempo_total:.1f}s — {len(todos)} resultado(s)"
+    )
+
+    return sorted(todos, key=lambda x: x["relevancia_score"], reverse=True)
+
+
+def _buscar_com_palavras(palavras: list, max_resultados: int) -> list:
+    """
+    Busca nas janelas configuradas (mais recente primeiro),
+    parando assim que encontrar pelo menos 1 resultado relevante.
+    """
+    todos = []
+    vistos = set()
+
+    for data_inicial, data_final in JANELAS_BUSCA:
+        resultados_janela = _buscar_janela_paralelo(
+            data_inicial, data_final, palavras
+        )
+
+        for c in resultados_janela:
+            nc = c["numero_controle"]
+            if nc not in vistos:
+                vistos.add(nc)
+                todos.append(c)
+
+        if len(todos) >= MIN_RESULTADOS_PARA_PARAR:
+            logger.info(
+                f"PNCP: {len(todos)} resultado(s) — "
+                f"pulando janelas restantes"
+            )
+            break
 
     return sorted(todos, key=lambda x: x["relevancia_score"], reverse=True)
 
@@ -208,13 +270,14 @@ def buscar_contratacoes_similares(
     max_resultados: int = MAX_CONTRATACOES,
 ) -> dict:
     """
-    Busca hierárquica conservadora no PNCP.
+    Busca hierárquica otimizada no PNCP.
 
-    Cada janela de data tem no máximo 365 dias (limite da API).
-    Uma requisição por vez com pausa entre elas.
+    3 UFs (DF, SP, MG) com concorrência=2, parando no
+    primeiro resultado relevante encontrado em qualquer nível.
     """
     logger.info(
-        f"PNCP: janelas configuradas: {JANELAS_BUSCA}"
+        f"PNCP: UFs={UFS_BUSCA}, concorrencia={MAX_WORKERS}, "
+        f"janelas={JANELAS_BUSCA}"
     )
 
     grupos = [
@@ -223,17 +286,21 @@ def buscar_contratacoes_similares(
         (3, ["software", "sistema", "tecnologia", "monitoramento"]),
     ]
 
+    tempo_inicio_total = time.monotonic()
+
     for nivel, palavras in grupos:
         validas = [p for p in palavras if p and len(p) > 2]
         if not validas:
             continue
 
         logger.info(f"PNCP: nivel {nivel} — {validas}")
-        resultados = _buscar_com_palavras(validas)
+        resultados = _buscar_com_palavras(validas, max_resultados)
 
         if resultados:
+            tempo_total = time.monotonic() - tempo_inicio_total
             logger.info(
-                f"PNCP: {len(resultados)} resultado(s) no nivel {nivel}"
+                f"PNCP: {len(resultados)} resultado(s) no nivel "
+                f"{nivel} — busca total em {tempo_total:.1f}s"
             )
             return {
                 "contratacoes":     resultados[:max_resultados],
@@ -243,7 +310,11 @@ def buscar_contratacoes_similares(
                 "erro":             None,
             }
 
-    logger.info("PNCP: nenhum resultado encontrado.")
+    tempo_total = time.monotonic() - tempo_inicio_total
+    logger.info(
+        f"PNCP: nenhum resultado encontrado "
+        f"(busca total em {tempo_total:.1f}s)."
+    )
     return {
         "contratacoes":     [],
         "total_encontrado": 0,
