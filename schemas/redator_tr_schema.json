@@ -1,0 +1,105 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+  
+    "required": [
+      "objeto_tr",
+      "a_definicao_objeto",
+      "b_fundamentacao_contratacao",
+      "c_descricao_solucao",
+      "d_requisitos_contratacao",
+      "e_modelo_execucao_objeto",
+      "f_modelo_gestao_contrato",
+      "g_criterios_pagamento",
+      "h_forma_criterios_selecao_fornecedor",
+      "i_estimativa_valor_contratacao",
+      "adequacao_orcamentaria",
+      "documento_markdown"
+    ],
+  
+    "properties": {
+  
+      "objeto_tr": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Cópia literal do objeto da contratação"
+      },
+  
+      "a_definicao_objeto": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea a) - definição do objeto, incluídos sua natureza, os quantitativos, o prazo do contrato e a possibilidade de prorrogação"
+      },
+  
+      "b_fundamentacao_contratacao": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea b) - fundamentação da contratação, referência ao ETP correspondente"
+      },
+  
+      "c_descricao_solucao": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea c) - descrição da solução como um todo, inclusive exigências de manutenção e assistência técnica"
+      },
+  
+      "d_requisitos_contratacao": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea d) - requisitos da contratação"
+      },
+  
+      "e_modelo_execucao_objeto": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea e) - modelo de execução do objeto, definição dos métodos e estratégia de suprimento"
+      },
+  
+      "f_modelo_gestao_contrato": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea f) - modelo de gestão do contrato, incluídos os mecanismos de fiscalização"
+      },
+  
+      "g_criterios_pagamento": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea g) - critérios de medição e de pagamento"
+      },
+  
+      "h_forma_criterios_selecao_fornecedor": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea h) - forma e critérios de seleção do fornecedor"
+      },
+  
+      "i_estimativa_valor_contratacao": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Alínea i) - estimativas do valor da contratação"
+      },
+  
+      "adequacao_orcamentaria": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Adequação orçamentária e cronograma físico-financeiro, quando aplicável"
+      },
+  
+      "matriz_riscos": {
+        "type": "string",
+        "description": "Matriz de riscos do contrato (art. 6º, XXVII), quando aplicável"
+      },
+  
+      "fontes_utilizadas": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Lista das fontes/agentes usados para fundamentar o TR (ETP gerado, Analista Mercado, Jurisprudencia TCU, Especialista 14.133, Especialista Tecnico)"
+      },
+  
+      "documento_markdown": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Documento completo do TR formatado em Markdown, pronto para conversão em Word, com todas as seções na ordem do art. 6º, XXIII"
+      }
+    }
+  }

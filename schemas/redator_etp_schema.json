@@ -1,0 +1,135 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+  
+    "required": [
+      "objeto_etp",
+      "i_descricao_necessidade",
+      "ii_previsao_pca",
+      "iii_requisitos_contratacao",
+      "iv_levantamento_mercado",
+      "v_estimativa_quantidades",
+      "vi_estimativa_valor",
+      "vii_descricao_solucoes_existentes",
+      "viii_justificativa_solucao_escolhida",
+      "ix_estimativa_impacto_ambiental",
+      "x_providencias_previas",
+      "xi_contratacoes_correlatas",
+      "xii_resultados_pretendidos",
+      "xiii_providencias_adequacao_ambiente",
+      "xiv_analise_riscos",
+      "posicionamento_conclusivo",
+      "documento_markdown"
+    ],
+  
+    "properties": {
+  
+      "objeto_etp": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Cópia literal do objeto da contratação"
+      },
+  
+      "i_descricao_necessidade": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso I (OBRIGATÓRIO) - descrição da necessidade da contratação, considerado o problema a ser resolvido sob a perspectiva do interesse público"
+      },
+  
+      "ii_previsao_pca": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso II - demonstração da previsão da contratação no Plano de Contratações Anual"
+      },
+  
+      "iii_requisitos_contratacao": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso III - requisitos da contratação"
+      },
+  
+      "iv_levantamento_mercado": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso IV (OBRIGATÓRIO) - levantamento de mercado, com a identificação das possíveis soluções e justificativa técnica e econômica da escolha"
+      },
+  
+      "v_estimativa_quantidades": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso V - estimativa das quantidades, acompanhadas das memórias de cálculo"
+      },
+  
+      "vi_estimativa_valor": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso VI (OBRIGATÓRIO) - estimativa do valor da contratação, acompanhada dos preços unitários referenciais e das memórias de cálculo"
+      },
+  
+      "vii_descricao_solucoes_existentes": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso VII - descrição da solução como um todo, inclusive das exigências relacionadas à manutenção e à assistência técnica"
+      },
+  
+      "viii_justificativa_solucao_escolhida": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso VIII (OBRIGATÓRIO) - justificativas para o parcelamento ou não da solução"
+      },
+  
+      "ix_estimativa_impacto_ambiental": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso IX - contratações correlatas e/ou interdependentes"
+      },
+  
+      "x_providencias_previas": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso X - descrição de possíveis impactos ambientais e respectivas medidas mitigadoras"
+      },
+  
+      "xi_contratacoes_correlatas": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso XI - providências a serem adotadas pela Administração previamente à celebração do contrato"
+      },
+  
+      "xii_resultados_pretendidos": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso XII - resultados pretendidos, em termos de economicidade e de melhor aproveitamento dos recursos"
+      },
+  
+      "xiii_providencias_adequacao_ambiente": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Inciso XIII (OBRIGATÓRIO) - providências para adequação do ambiente da organização"
+      },
+  
+      "xiv_analise_riscos": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Análise de riscos técnicos, operacionais, financeiros e jurídicos, com medidas de mitigação"
+      },
+  
+      "posicionamento_conclusivo": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Posicionamento conclusivo sobre a viabilidade técnica e econômica da contratação"
+      },
+  
+      "fontes_utilizadas": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Lista das fontes/agentes usados para fundamentar o ETP (Scout, Analista Mercado, Jurisprudencia TCU, Especialista 14.133, Especialista Tecnico)"
+      },
+  
+      "documento_markdown": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Documento completo do ETP formatado em Markdown, pronto para conversão em Word, com todas as seções na ordem do art. 18 §1º"
+      }
+    }
+  }

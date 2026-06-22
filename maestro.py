@@ -7,8 +7,8 @@ from agents.analista_mercado import AnalistaMercado
 from agents.jurisprudencia_tcu import JurisprudenciaTCU
 from agents.especialista_14133 import Especialista14133
 from agents.especialista_tecnico import EspecialistaTecnico
-# from agents.redator_tr import RedatorTR
-# from agents.redator_etp import RedatorETP
+from agents.redator_tr import RedatorTR
+from agents.redator_etp import RedatorETP
 
 from utils.agent_executor import AgentExecutor
 
@@ -23,9 +23,9 @@ class Maestro:
         "Analista Mercado": AnalistaMercado,
         "Jurisprudencia TCU": JurisprudenciaTCU,
         "Especialista 14.133": Especialista14133,
-        "Especialista Tecnico": EspecialistaTecnico
-        # "Redator TR": RedatorTR,
-        # "Redator ETP": RedatorETP,
+        "Especialista Tecnico": EspecialistaTecnico,
+        "Redator ETP": RedatorETP,
+        "Redator TR": RedatorTR,
     }
 
     def __init__(self):
@@ -40,14 +40,17 @@ class Maestro:
                 "Analista Mercado",
                 "Jurisprudencia TCU",
                 "Especialista 14.133",
-                "Especialista Tecnico"
+                "Especialista Tecnico",
+                "Redator ETP"
             ],
             "TR": [
                 "Scout",
                 "Analista Mercado",
                 "Jurisprudencia TCU",
                 "Especialista 14.133",
-                "Especialista Tecnico"
+                "Especialista Tecnico",
+                "Redator ETP",
+                "Redator TR"
             ]
         }
 
@@ -164,7 +167,9 @@ SOLICITAÇÃO DO USUÁRIO:
             dados_maestro["objeto_contratacao"]
         )
 
-        agentes = dados_maestro["agentes_necessarios"]
+        agentes = self.obter_agentes(
+            dados_maestro["tipo_documento"]
+        )
 
         print("\nAGENTES PLANEJADOS:")
         print(agentes)
