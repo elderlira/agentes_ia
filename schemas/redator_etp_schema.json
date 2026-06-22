@@ -18,8 +18,7 @@
       "xii_resultados_pretendidos",
       "xiii_providencias_adequacao_ambiente",
       "xiv_analise_riscos",
-      "posicionamento_conclusivo",
-      "documento_markdown"
+      "posicionamento_conclusivo"
     ],
   
     "properties": {
@@ -81,19 +80,19 @@
       "ix_estimativa_impacto_ambiental": {
         "type": "string",
         "minLength": 1,
-        "description": "Inciso IX - contratações correlatas e/ou interdependentes"
+        "description": "Inciso IX - estimativa do impacto ambiental da contratação, com a descrição de possíveis impactos ambientais e respectivas medidas mitigadoras"
       },
   
       "x_providencias_previas": {
         "type": "string",
         "minLength": 1,
-        "description": "Inciso X - descrição de possíveis impactos ambientais e respectivas medidas mitigadoras"
+        "description": "Inciso X - providências a serem adotadas pela Administração previamente à celebração do contrato, inclusive quanto à capacitação técnica dos servidores envolvidos na contratação"
       },
   
       "xi_contratacoes_correlatas": {
         "type": "string",
         "minLength": 1,
-        "description": "Inciso XI - providências a serem adotadas pela Administração previamente à celebração do contrato"
+        "description": "Inciso XI - contratações correlatas, com a descrição de contratações anteriores ou em andamento, de natureza similar, realizadas pela própria Administração ou por outras entidades públicas, com a indicação dos respectivos objetos, valores e resultados alcançados"
       },
   
       "xii_resultados_pretendidos": {
@@ -124,12 +123,6 @@
         "type": "array",
         "items": { "type": "string" },
         "description": "Lista das fontes/agentes usados para fundamentar o ETP (Scout, Analista Mercado, Jurisprudencia TCU, Especialista 14.133, Especialista Tecnico)"
-      },
-  
-      "documento_markdown": {
-        "type": "string",
-        "minLength": 1,
-        "description": "Documento completo do ETP formatado em Markdown, pronto para conversão em Word, com todas as seções na ordem do art. 18 §1º"
       }
     }
   }

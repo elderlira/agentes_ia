@@ -86,17 +86,38 @@ rigorosamente a estrutura do art. 18, §1º da Lei 14.133/2021.
 Preencha objeto_etp com:
 {objeto_original}
 
-Lembre-se: os incisos I, IV, VI, VIII e XIII sao OBRIGATORIOS
-e nao podem ficar vazios ou genericos.
+Lembre-se: os incisos I, IV, VI, VIII e XIII são obrigatórios
+e não podem ficar vazios, resumidos ou genéricos.
 
-O campo documento_markdown deve conter o ETP completo e
-autossuficiente, formatado com cabecalhos ## para cada secao.
+Preencha todas as seções com conteúdo completo.
+Não gere documento_markdown.
+Retorne apenas os campos definidos no schema.
 """
 
         dados = AgentExecutor.executar(
             prompt=prompt_final,
             schema_path=self.SCHEMA,
         )
+
+        resultado_json = json.dumps(
+            dados,
+            ensure_ascii=False
+        )
+
+        termos_proibidos = [
+            "8.666",
+            "10.520",
+            "Lei nº 8.666",
+            "Lei 8.666",
+            "Lei nº 10.520",
+            "Lei 10.520"
+        ]
+
+        for termo in termos_proibidos:
+            if termo.lower() in resultado_json.lower():
+                raise Exception(
+                    f"REFERENCIA_LEGAL_REVOGADA_DETECTADA: {termo}"
+                )
 
         doc = Document()
 
@@ -105,16 +126,28 @@ autossuficiente, formatado com cabecalhos ## para cada secao.
             level=1
         )
 
-        for linha in dados["documento_markdown"].splitlines():
+        secoes = [
+            ("1. Objeto", dados["objeto_etp"]),
+            ("2. Descrição da Necessidade", dados["i_descricao_necessidade"]),
+            ("3. Previsão no PCA", dados["ii_previsao_pca"]),
+            ("4. Requisitos da Contratação", dados["iii_requisitos_contratacao"]),
+            ("5. Levantamento de Mercado", dados["iv_levantamento_mercado"]),
+            ("6. Estimativa de Quantidades", dados["v_estimativa_quantidades"]),
+            ("7. Estimativa do Valor", dados["vi_estimativa_valor"]),
+            ("8. Descrição da Solução", dados["vii_descricao_solucoes_existentes"]),
+            ("9. Justificativa da Solução", dados["viii_justificativa_solucao_escolhida"]),
+            ("10. Impacto Ambiental", dados["ix_estimativa_impacto_ambiental"]),
+            ("11. Providências Prévias", dados["x_providencias_previas"]),
+            ("12. Contratações Correlatas", dados["xi_contratacoes_correlatas"]),
+            ("13. Resultados Pretendidos", dados["xii_resultados_pretendidos"]),
+            ("14. Adequação do Ambiente", dados["xiii_providencias_adequacao_ambiente"]),
+            ("15. Análise de Riscos", dados["xiv_analise_riscos"]),
+            ("16. Posicionamento Conclusivo", dados["posicionamento_conclusivo"]),
+        ]
 
-            if linha.startswith("## "):
-                doc.add_heading(
-                    linha.replace("## ", ""),
-                    level=2
-                )
-
-            elif linha.strip():
-                doc.add_paragraph(linha)
+        for titulo, conteudo in secoes:
+            doc.add_heading(titulo, level=2)
+            doc.add_paragraph(conteudo)
 
         arquivo = (
             f"ETP_"
