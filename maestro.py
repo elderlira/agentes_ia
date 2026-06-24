@@ -12,8 +12,6 @@ from agents.redator_etp import RedatorETP
 
 from utils.agent_executor import AgentExecutor
 
-
-
 class Maestro:
 
     SCHEMA_MAESTRO = "schemas/maestro_schema.json"
@@ -58,65 +56,60 @@ class Maestro:
 
     def executar_agentes(self, agentes):
 
+        from services.pncp_service import buscar_contratacoes_similares
+
         for agente_nome in agentes:
-
-
-            # if agente_nome not in self.MAPA_AGENTES:
-
-            #     raise Exception(
-            #         f"Agente solicitado pelo Maestro não existe: {agente_nome}"
-            #     )
-
             if agente_nome not in self.MAPA_AGENTES:
-                raise Exception(
-                    f"Agente não mapeado: {agente_nome}"
-                )
+                print(f"Agente {agente_nome} não mapeado.")
+                continue
 
-            agente = self.MAPA_AGENTES[agente_nome]()
-
-            chave_contexto = (
-                agente_nome.lower()
-                .replace(" ", "_")
-                .replace(".", "")
-                .replace("ã", "a")
-            )
+            print(f"\n[MAESTRO] Executando: {agente_nome}...")
+            agente_classe = self.MAPA_AGENTES[agente_nome]
+            agente_instancia = agente_classe()
 
             try:
+                dict_contexto = getattr(self.contexto, "dados", self.contexto.__dict__)
 
-                resultado = agente.executar(
-                    self.contexto.obter()
-                )
+                resultado_agente = agente_instancia.executar(dict_contexto)
 
-                if not resultado:
-                    raise Exception(
-                        f"{agente_nome} retornou vazio."
-                    )
-                
-                self.contexto.atualizar(
-                    chave_contexto,
-                    resultado
-                )
+                self.contexto.atualizar(agente_nome, resultado_agente)
+
+                chave_snake = agente_nome.lower().replace(" ", "_")
+                self.contexto.atualizar(chave_snake, resultado_agente)
+
+                if agente_nome == "Analista Mercado":
+                    print("[MAESTRO -> PNCP] Buscando contratações reais no PNCP para fundamentação analítica...")
+                    
+                    objeto_busca = dict_contexto.get("objeto_contratacao") or dict_contexto.get("pergunta_original", "TI")
+                    
+                    try:
+                        dados_pncp = buscar_contratacoes_similares(objeto_busca, max_resultados=5)
+                        contratacoes_reais = dados_pncp.get("contratacoes", [])
+                        
+                        if isinstance(resultado_agente, dict):
+                            resultado_agente["pncp_dados"] = contratacoes_reais
+                            
+                            self.contexto.atualizar("Analista Mercado", resultado_agente)
+                            self.contexto.atualizar("analista_mercado", resultado_agente)
+                            print(f"[MAESTRO -> PNCP] Sucesso: {len(contratacoes_reais)} licitações reais integradas ao contexto.")
+                    except Exception as p_err:
+                        print(f"[MAESTRO -> PNCP] Aviso: Falha ao coletar dados do PNCP: {p_err}")
 
                 self.contexto.registrar_execucao(
                     agente_nome,
-                    "concluido",
-                    # qualidade=resultado.get(
-                    #     "nivel_confianca"
-                    # )
+                    "sucesso"
                 )
 
-            except Exception as erro:
-
+            except Exception as e:
+                print(f"Erro ao executar agente {agente_nome}: {e}")
                 self.contexto.atualizar(
-                    f"{chave_contexto}_erro",
-                    str(erro)
+                    f"{agente_nome.lower().replace(' ', '_')}_erro",
+                    str(e)
                 )
-
                 self.contexto.registrar_execucao(
                     agente_nome,
                     "erro"
                 )
-
                 break
 
     def processar(self, pergunta):

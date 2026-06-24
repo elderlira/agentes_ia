@@ -10,3 +10,7 @@ resultado = maestro.processar(
 )
 
 print(resultado)
+
+print(
+    resultado.get("redator_etp_erro")
+)

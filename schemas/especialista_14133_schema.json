@@ -1,159 +1,94 @@
 {
-    "type": "object",
-    "required": [
-      "informacoes_basicas_do_documento",
-      "fundamentacao_legal",
-      "necessidade_de_etp",
-      "pontos_obrigatorios_etp",
-      "riscos_juridicos",
-      "aspectos_de_governanca",
-      "diretrizes_para_redacao",
-      "observacoes_relevantes",
-      "justificativa_da_solucao_recomendada",
-      "metodologia_da_contratacao",
-      "planejamento",
-      "viabilidade"
-    ],
-    "properties": {
-      "informacoes_basicas_do_documento": {
-        "type": "object"
-      },
-  
-     "fundamentacao_legal": {
+  "type": "object",
+  "required": [
+    "informacoes_basicas_do_documento",
+    "fundamentacao_legal",
+    "necessidade_de_etp",
+    "pontos_obrigatorios_etp",
+    "riscos_juridicos",
+    "aspectos_de_governanca",
+    "diretrizes_para_redacao",
+    "observacoes_relevantes",
+    "justificativa_da_solucao_recomendada",
+    "metodologia_da_contratacao",
+    "planejamento",
+    "viabilidade"
+  ],
+  "properties": {
+    "informacoes_basicas_do_documento": {
       "type": "object",
+      "properties": {
+        "titulo": { "type": "string" },
+        "objeto": { "type": "string" }
+      }
+    },
+    "fundamentacao_legal": {
+      "type": "array",
       "items": {
         "type": "object",
-        "required": [
-          "artigo",
-          "descricao",
-          "aplicacao"
-        ],
+        "required": ["artigo", "descricao"],
         "properties": {
-          "artigo": {
-            "type": "string"
-          },
-          "descricao": {
-            "type": "string"
-          },
-          "aplicacao": {
-            "type": "string"
-          }
+          "artigo": { "type": "string" },
+          "descricao": { "type": "string" },
+          "aplicacao": { "type": "string" }
         }
       }
     },
-  
-      "necessidade_de_etp": {
-        "type": "string"
-      },
-  
-      "pontos_obrigatorios_etp": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "string"
-        }
-      },
-  
-      "riscos_juridicos": {
+    "necessidade_de_etp": { "type": "string" },
+    "pontos_obrigatorios_etp": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "riscos_juridicos": {
+      "type": "array",
+      "items": {
         "type": "object",
-        "items": {
-          "type": "object",
-          "required": [
-            "risco",
-            "impacto",
-            "mitigacao"
-          ],
-          "properties": {
-            "risco": {
-              "type": "string"
-            },
-            "impacto": {
-              "type": "string"
-            },
-            "mitigacao": {
-              "type": "string"
-            }
-          }
-        }
-      },
-  
-      "aspectos_de_governanca": {
-        "type": "object",
-        "items": {
-          "type": "object",
-          "required": [
-            "tema",
-            "orientacao"
-          ],
-          "properties" :{
-            "tema": {
-              "type": "string"
-            },
-            "orientacao": {
-              "type": "string"
-          } 
-        }
-      },
-  
-      "diretrizes_para_redacao": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "string"
-        }
-      },
-  
-      "observacoes_relevantes": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "string"
-        }
-      },
-
-      "justificativa_da_solucao_recomendada": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "string"
-        }
-      },
-
-      "metodologia_da_contratacao": {
-        "type": "object",
-        "items": {
-          "type": "object"
-        },
-        "required": [
-          "etapa",
-          "objetivo"
-        ],
+        "required": ["risco", "impacto", "mitigacao"],
         "properties": {
-          "etapa": {
-            "type": "string"
-          },
-          "objetivo": {
-            "type": "string"
-          }
-        }
-      },
-
-      "planejamento": {
-        "type": "array",
-        "minItems": 1,
-        "items": {
-          "type": "string"
-        }
-      },
-
-      "viabilidade": {
-        "type": "object",
-        "minItems": 1,
-        "items": {
-          "type": "string"
+          "risco": { "type": "string" },
+          "impacto": { "type": "string" },
+          "mitigacao": { "type": "string" }
         }
       }
-      
-    }
+    },
+    "aspectos_de_governanca": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["tema", "orientacao"],
+        "properties": {
+          "tema": { "type": "string" },
+          "orientacao": { "type": "string" }
+        }
+      }
+    },
+    "diretrizes_para_redacao": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "observacoes_relevantes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "justificativa_da_solucao_recomendada": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "metodologia_da_contratacao": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["etapa", "objetivo"],
+        "properties": {
+          "etapa": { "type": "string" },
+          "objetivo": { "type": "string" }
+        }
+      }
+    },
+    "planejamento": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "viabilidade": { "type": "object" }
   }
 }

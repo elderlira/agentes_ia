@@ -24,14 +24,10 @@
           "requisito": {
             "type": "string"
           },
-          "origem": {
-            "type": "string",
-            "enum": [
-              "Scout",
-              "Analista Mercado",
-              "Especialista 14.133"
-            ]
-          }
+        "origem": {
+          "type": "string",
+          "enum": ["Scout", "Analista Mercado", "Especialista 14.133", "Jurisprudencia TCU", "Especialista Tecnico"]
+        }
         }
       }
     },

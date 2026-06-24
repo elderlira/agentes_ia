@@ -44,6 +44,7 @@ OTIMIZAÇÕES v8.0:
 
 import time
 import logging
+import random
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import requests
@@ -118,58 +119,45 @@ def _requisicao(
     palavras: list,
 ) -> list:
     """
-    Faz uma única requisição. SEM retry em 429 — apenas
-    registra e descarta, para não duplicar o tempo de espera.
+    Faz uma única requisição com micro-delay para evitar bloqueios de 429 por concorrência pura.
     """
+    # Adiciona um delay dinâmico pequeno entre 0.1 e 0.6 segundos para quebrar o paralelismo exato
+    time.sleep(random.uniform(0.1, 0.6))
+    
     try:
+        # Mantém exatamente os mesmos parâmetros originais da sua função
+        params = {
+            "dataInicial":                  data_inicial,
+            "dataFinal":                    data_final,
+            "codigoModalidadeContratacao":  modalidade,
+            "tamanhoPagina":                TAMANHO_PAGINA,
+            "pagina":                       1,
+        }
+        if uf: # Permite buscar de forma geral se UF for omitida
+            params["uf"] = uf
+
         resp = requests.get(
             f"{PNCP_BASE}/contratacoes/publicacao",
-            params={
-                "dataInicial":                  data_inicial,
-                "dataFinal":                    data_final,
-                "codigoModalidadeContratacao":  modalidade,
-                "uf":                           uf,
-                "tamanhoPagina":                TAMANHO_PAGINA,
-                "pagina":                       1,
-            },
+            params=params,
             timeout=TIMEOUT_SEGUNDOS,
             headers={"Accept": "application/json"},
         )
 
         if resp.status_code == 422:
-            corpo = resp.text[:300] if resp.text else ""
-            logger.warning(
-                f"PNCP: 422 uf={uf} mod={modalidade} "
-                f"janela={data_inicial}-{data_final} corpo={corpo}"
-            )
             return []
 
         if resp.status_code == 429:
-            # Sem retry — apenas descarta esta UF nesta rodada
-            logger.warning(
-                f"PNCP: 429 rate limit uf={uf} — descartando "
-                f"sem retry (outras UFs/janelas compensam)"
-            )
+            logger.warning(f"PNCP: 429 rate limit uf={uf or 'BR'} — descartando.")
             return []
 
         resp.raise_for_status()
         itens = resp.json().get("data", [])
 
-    except requests.exceptions.Timeout:
-        logger.warning(f"PNCP: timeout uf={uf} ({TIMEOUT_SEGUNDOS}s)")
-        return []
-    except requests.exceptions.ConnectionError as e:
-        logger.warning(f"PNCP: conexao falhou uf={uf}: {e}")
-        return []
     except Exception as e:
-        logger.warning(f"PNCP: erro uf={uf}: {e}")
+        logger.warning(f"PNCP: erro uf={uf or 'BR'}: {e}")
         return []
 
-    candidatos = [
-        (s, item)
-        for item in itens
-        if (s := _pontuar(item, palavras)) > 0
-    ]
+    candidatos = [(s, item) for item in itens if (s := _pontuar(item, palavras)) > 0]
     candidatos.sort(key=lambda x: x[0], reverse=True)
     return [_formatar(i, s) for s, i in candidatos[:MAX_CONTRATACOES]]
 
@@ -179,28 +167,15 @@ def _buscar_janela_paralelo(
     data_final: str,
     palavras: list,
 ) -> list:
-    """
-    Consulta as UFs configuradas com concorrência = MAX_WORKERS.
-    Log reflete a concorrência REAL, não o total de UFs.
-    """
     todos = []
     vistos = set()
 
-    logger.info(
-        f"PNCP: janela {data_inicial} → {data_final} "
-        f"— {len(UFS_BUSCA)} UFs, concorrencia={MAX_WORKERS}"
-    )
-
+    logger.info(f"PNCP: janela {data_inicial} → {data_final} — {len(UFS_BUSCA)} UFs, concorrencia={MAX_WORKERS}")
     inicio_tempo = time.monotonic()
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         futures = {
-            executor.submit(
-                _requisicao,
-                uf, MODALIDADE_PRINCIPAL,
-                data_inicial, data_final,
-                palavras,
-            ): uf
+            executor.submit(_requisicao, uf, MODALIDADE_PRINCIPAL, data_inicial, data_final, palavras): uf
             for uf in UFS_BUSCA
         }
 
@@ -208,28 +183,30 @@ def _buscar_janela_paralelo(
             uf = futures[future]
             try:
                 resultados = future.result()
+                for c in resultados:
+                    nc = c["numero_controle"]
+                    if nc not in vistos:
+                        vistos.add(nc)
+                        todos.append(c)
+                if len(todos) >= MIN_RESULTADOS_PARA_PARAR:
+                    for f in futures: f.cancel()
+                    break
             except Exception as e:
-                logger.warning(f"PNCP: thread uf={uf} falhou: {e}")
                 continue
 
-            for c in resultados:
-                nc = c["numero_controle"]
-                if nc not in vistos:
-                    vistos.add(nc)
-                    todos.append(c)
-
-            # Early-stop: já achou o suficiente, cancela o resto
-            if len(todos) >= MIN_RESULTADOS_PARA_PARAR:
-                for f in futures:
-                    f.cancel()
-                break
+    # FALLBACK ESTRATÉGICO: Se fomos completamente bloqueados nas UFs (todos vazio),
+    # tenta uma única chamada nacional direta (sem UF) para salvar o contexto do ETP.
+    if not todos:
+        logger.info("PNCP: UFs bloqueadas/vazias. Tentando chamada fallback nacional...")
+        resultados_br = _requisicao(None, MODALIDADE_PRINCIPAL, data_inicial, data_final, palavras)
+        for c in resultados_br:
+            nc = c["numero_controle"]
+            if nc not in vistos:
+                vistos.add(nc)
+                todos.append(c)
 
     tempo_total = time.monotonic() - inicio_tempo
-    logger.info(
-        f"PNCP: janela {data_inicial}-{data_final} concluida em "
-        f"{tempo_total:.1f}s — {len(todos)} resultado(s)"
-    )
-
+    logger.info(f"PNCP: janela {data_inicial}-{data_final} concluida em {tempo_total:.1f}s — {len(todos)} resultado(s)")
     return sorted(todos, key=lambda x: x["relevancia_score"], reverse=True)
 
 
