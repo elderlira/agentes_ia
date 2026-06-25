@@ -1,0 +1,8 @@
+{
+    "type": "object",
+    "required": ["requisitos_tecnicos", "requisitos_funcionais"],
+    "properties": {
+      "requisitos_tecnicos": { "type": "array", "items": { "type": "string" }, "minItems": 5 },
+      "requisitos_funcionais": { "type": "array", "items": { "type": "string" }, "minItems": 5 }
+    }
+  }

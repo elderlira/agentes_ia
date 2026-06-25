@@ -1,0 +1,20 @@
+{
+    "type": "object",
+    "required": ["analise_mercado", "alternativas_avaliadas"],
+    "properties": {
+      "analise_mercado": { "type": "string", "minLength": 400 },
+      "alternativas_avaliadas": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["nome", "descricao", "vantagens", "desvantagens"],
+          "properties": {
+            "nome": {"type": "string"},
+            "descricao": {"type": "string", "minLength": 150},
+            "vantagens": {"type": "array", "items": {"type": "string"}},
+            "desvantagens": {"type": "array", "items": {"type": "string"}}
+          }
+        }
+      }
+    }
+  }

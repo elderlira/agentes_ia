@@ -1,0 +1,7 @@
+{
+    "type": "object",
+    "required": ["conclusao_tecnica"],
+    "properties": {
+      "conclusao_tecnica": { "type": "string", "minLength": 500 }
+    }
+  }

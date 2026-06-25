@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "required": ["matriz_riscos"],
+  "properties": {
+    "matriz_riscos": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["risco", "impacto", "mitigacao"],
+        "properties": {
+          "risco": {"type": "string"},
+          "impacto": {"type": "string"},
+          "mitigacao": {"type": "string", "minLength": 150}
+        }
+      }
+    }
+  }
+}

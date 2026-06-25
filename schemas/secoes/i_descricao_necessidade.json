@@ -1,0 +1,7 @@
+{
+    "type": "object",
+    "required": ["descricao_detalhada"],
+    "properties": {
+      "descricao_detalhada": { "type": "string", "minLength": 500 }
+    }
+  }

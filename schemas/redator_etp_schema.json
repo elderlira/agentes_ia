@@ -21,20 +21,59 @@
   ],
   "properties": {
     "objeto_etp": { "type": "string" },
-    "i_descricao_necessidade": { "type": "string" },
+    "i_descricao_necessidade": { "type": "string", "minLength": 200 },
     "ii_previsao_pca": { "type": "string" },
-    "iii_requisitos_contratacao": { "type": "string" },
-    "iv_levantamento_mercado": { "type": ["string", "object"] },
+    "iii_requisitos_contratacao": { "type": "string", "minLength": 200 },
+    "iv_levantamento_mercado": {
+      "type": "object",
+      "required": ["introducao_mercado", "alternativas_avaliadas"],
+      "properties": {
+        "introducao_mercado": { "type": "string", "minLength": 100 },
+        "alternativas_avaliadas": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["nome", "descricao", "vantagens", "desvantagens"],
+            "properties": {
+              "nome": { "type": "string" },
+              "descricao": { "type": "string", "minLength": 80 },
+              "vantagens": { "type": "array", "items": { "type": "string" }, "minItems": 2 },
+              "desvantagens": { "type": "array", "items": { "type": "string" }, "minItems": 1 }
+            }
+          }
+        }
+      }
+    },
     "v_estimativa_quantidades": { "type": "string" },
     "vi_estimativa_valor": { "type": "string" },
-    "vii_descricao_solucoes_existentes": { "type": "string" },
-    "viii_justificativa_solucao_escolhida": { "type": ["string", "object"] },
+    "vii_descricao_solucoes_existentes": { "type": "string", "minLength": 150 },
+    "viii_justificativa_solucao_escolhida": {
+      "type": "object",
+      "required": ["solucao_selecionada", "analise_comparativa_criterios", "justificativa_final"],
+      "properties": {
+        "solucao_selecionada": { "type": "string" },
+        "analise_comparativa_criterios": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["criterio", "por_que_venceu"],
+            "properties": {
+              "criterio": { "type": "string" },
+              "por_que_venceu": { "type": "string", "minLength": 50 }
+            }
+          }
+        },
+        "justificativa_final": { "type": "string", "minLength": 150 }
+      }
+    },
     "ix_estimativa_impacto_ambiental": { "type": "string" },
-    "x_providencias_previas": { "type": "string" },
-    "xi_contratacoes_correlatas": { "type": "string" },
-    "xii_resultados_pretendidos": { "type": "string" },
-    "xiii_providencias_adequacao_ambiente": { "type": "string" },
-    "xiv_analise_riscos": { "type": "string" },
-    "posicionamento_conclusivo": { "type": "string" }
+    "x_providencias_previas": { "type": "string", "minLength": 150 },
+    "xi_contratacoes_correlatas": { "type": "string", "minLength": 100 },
+    "xii_resultados_pretendidos": { "type": "string", "minLength": 150 },
+    "xiii_providencias_adequacao_ambiente": { "type": "string", "minLength": 150 },
+    "xiv_analise_riscos": { "type": "string", "minLength": 200 },
+    "posicionamento_conclusivo": { "type": "string", "minLength": 150 }
   }
 }

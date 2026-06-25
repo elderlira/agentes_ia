@@ -1,208 +1,150 @@
 """
-Agente Redator ETP — Camada 3
+Agente Redator ETP — Camada 3 (Arquitetura Modular)
 
-Consolida os dados de Scout, Analista Mercado, Jurisprudencia TCU,
-Especialista 14.133 e Especialista Tecnico em um Estudo Tecnico
-Preliminar completo, seguindo a estrutura do art. 18, §1º da
-Lei 14.133/2021.
-
-Roda ANTES do Redator TR — o TR depende do ETP gerado aqui.
+Consolida os dados de Scout, Analista Mercado, Jurisprudência TCU,
+Especialista 14.133 e Especialista Técnico num Estudo Técnico
+Preliminar robusto e extenso, processando cada secção do art. 18, §1º da
+Lei 14.133/2021 de forma isolada para evitar sobrecarga de tokens.
 """
 
 import json
 import logging
 import os
-
-from prompt_loader import load_prompt
-from utils.agent_executor import AgentExecutor
-from docx import Document
 from datetime import datetime
+from docx import Document
+from utils.agent_executor import AgentExecutor
 
 logger = logging.getLogger(__name__)
 
 
 class RedatorETP:
 
-    SCHEMA = "schemas/redator_etp_schema.json"
+    SECOES_CONFIG = {
+        "objeto_etp": "Definição clara, concisa e precisa do objeto da contratação (ex: Sistema de contagem de pessoas por Inteligência Artificial).",
+        "i_descricao_necessidade": "Descrição detalhada da necessidade da contratação, demonstrando o problema a ser resolvido, causas, impactos e a real necessidade pública de forma exaustiva.",
+        "ii_previsao_pca": "Demonstração do alinhamento da contratação com o Plano de Contratações Anual (PCA) e documentos de planeamento estratégico do órgão.",
+        "iii_requisitos_contratacao": "Especificação exaustiva dos requisitos necessários ao atendimento da necessidade, incluindo padrões mínimos de qualidade, SLAs, critérios de eficiência e eficácia.",
+        "iv_levantamento_mercado": "Análise técnica detalhada das alternativas possíveis de mercado, contemplando vantagens e desvantagens de cada modelo tecnológico disponível.",
+        "v_estimativa_quantidades": "Memória de cálculo detalhada e fundamentada que justifique as quantidades a serem contratadas, acompanhada de métricas utilizadas.",
+        "vi_estimativa_valor": "Metodologia detalhada utilizada para a estimativa de custos e o valor total preliminar estimado para a contratação.",
+        "vii_descricao_solucoes_existentes": "Descrição técnica completa da solução como um todo, englobando arquitetura, integração e engenharia da melhor alternativa identificada.",
+        "viii_justificativa_solucao_escolhida": "Justificativa clara e comparativa técnica e económica dos motivos que levaram à escolha da solução selecionada frente às demais alternativas.",
+        "ix_estimativa_impacto_ambiental": "Análise aprofundada dos impactos ambientais diretos e indiretos, elencando medidas mitigadoras e critérios de sustentabilidade aplicáveis.",
+        "x_providencias_previas": "Listagem e detalhamento de todas as providências a serem adotadas pela administração antes da celebração do contrato (ex: adequações normativas, vistorias).",
+        "xi_contratacoes_correlatas": "Identificação de contratações correlatas, interdependentes ou complementares que possam impactar o sucesso da execução deste objeto.",
+        "xii_resultados_pretendidos": "Demonstração clara dos resultados pretendidos em termos de eficiência, economicidade, ganho de produtividade e melhoria do serviço público.",
+        "xiii_providencias_adequacao_ambiente": "Mapeamento das providências necessárias para a adequação do ambiente do órgão, infraestrutura tecnológica, elétrica ou lógica para receber a solução.",
+        "xiv_analise_riscos": "Matriz e gestão de riscos completa da contratação, apontando riscos identificados, probabilidade, impacto e ações preventivas/mitigadoras (Alinhado ao TCU).",
+        "posicionamento_conclusivo": "Declaração e posicionamento conclusivo da equipe de planeamento quanto à viabilidade técnica, jurídica e económica da contratação."
+    }
 
     def executar(self, contexto: dict) -> dict:
+        etp_dados_finais = {}
+        logger.info("A iniciar a geração modular do ETP com injeção de RAG (TCU/PNCP)...")
+
         objeto_original = (
             contexto.get("objeto_original")
             or contexto.get("objeto_contratacao")
-            or contexto.get("pergunta_original")
-            or "Sistema de contagem de pessoas por inteligência artificial"
+            or "Sistema de contagem de pessoas por Inteligência Artificial"
         )
 
-        scout = contexto.get("scout") or contexto.get("Scout", {})
-        analista_mercado = contexto.get("analista_mercado") or contexto.get("Analista Mercado", {})
-        jurisprudencia_tcu = contexto.get("jurisprudencia_tcu") or contexto.get("Jurisprudencia TCU", {})
-        especialista_14133 = contexto.get("especialista_14133") or contexto.get("Especialista 14.133", {})
-        especialista_tecnico = contexto.get("especialista_tecnico") or contexto.get("Especialista Tecnico", {})
+        # Extrai os dados do RAG coletados previamente para garantir consistência
+        dados_tcu = contexto.get("jurisprudencia_tcu") or contexto.get("Jurisprudencia TCU", {})
+        dados_mercado_compras = contexto.get("analista_mercado") or contexto.get("Analista Mercado", {})
 
-        # Processamento das soluções de mercado
-        tipos_solucao = analista_mercado.get("tipos_solucao", [])
-        solucoes_texto = ""
-        for sol in tipos_solucao:
-            solucoes_texto += f"• Categoria: {sol.get('categoria', '')}\n  Descrição: {sol.get('descricao', '')}\n"
-            solucoes_texto += f"  Vantagens: {', '.join([v.get('titulo') for v in sol.get('vantagens', [])])}\n"
-            solucoes_texto += f"  Desvantagens: {', '.join([d.get('ponto') for d in sol.get('desvantagens', [])])}\n\n"
+        for secao_id, orientacao in self.SECOES_CONFIG.items():
+            logger.info(f"A processar secção: {secao_id}")
+            
+            schema_path = f"schemas/secoes/{secao_id}.json"
+            
+            # Tratamento robusto para evitar o erro de NoneType caso o schema não exista
+            
+            if not os.path.exists(schema_path):
+                logger.warning(f"Schema específico não encontrado para {secao_id}. Utilizando schema global.")
+                schema_path = "schemas/redator_etp_schema.json"
 
-        if not solucoes_texto:
-            solucoes_texto = "Soluções comerciais baseadas em processamento de vídeo em tempo real por IA e integração com sistemas de monitoramento."
+            # Montagem do prompt com blocos isolados e direcionados de RAG
+            prompt = f"""
+            Você é um Consultor Jurídico e Analista Técnico Especialista em Licitações Públicas, com foco na Lei 14.133/2021.
+            Redija a secção técnica '{secao_id}' para o ETP do objeto: "{objeto_original}".
 
-        # Processamento aprofundado de Acórdãos
-        acordaos = jurisprudencia_tcu.get("jurisprudencias_relevantes", [])
-        acordaos_texto = ""
-        for ac in acordaos:
-            acordaos_texto += f"• {ac.get('acordao', 'Acórdão')} ({ac.get('ano')}) - Tema: {ac.get('tema')}\n"
-            acordaos_texto += f"  Resumo Executivo: {ac.get('resumo')}\n"
-            acordaos_texto += f"  Link de Referência: {ac.get('link_referencia')}\n\n"
+            Diretriz da Secção:
+            {orientacao}
 
-        # Cruzamento estruturado de Riscos
-        riscos_texto = "Análise de Riscos Estruturada:\n"
-        for r_tcu in jurisprudencia_tcu.get("riscos_identificados", []):
-            riscos_texto += f"• Risco (Diretriz TCU): {r_tcu}\n"
-        
-        riscos_juridicos = especialista_14133.get("riscos_juridicos", [])
-        for r in riscos_juridicos:
-            riscos_texto += f"• Risco Jurídico: {r.get('risco')}\n  Impacto: {r.get('impacto')}\n  Mitigação: {r.get('mitigacao')}\n\n"
+            =======================================================================
+            PRECECENTES E JURISPRUDÊNCIA DO TCU (RAG Mandatório):
+            {json.dumps(dados_tcu, ensure_ascii=False, indent=2)}
 
-        # Montagem dos dados associando as novas descobertas do TCU
-        dados = {
-            "objeto_etp": str(objeto_original),
-            
-            "i_descricao_necessidade": (
-                f"A presente contratação visa atender à necessidade pública de automação e refinamento operacional na "
-                f"{scout.get('finalidade_principal', 'contagem precisa de fluxo de pessoas')}. "
-                f"A justificativa técnica ampara-se no fato de que métodos tradicionais ou manuais carecem de precisão e escalabilidade. "
-                f"A adoção de um {scout.get('natureza_objeto', 'sistema tecnológico baseado em inteligência artificial')} visa alcançar como resultado esperado a "
-                f"{scout.get('resultado_esperado', 'contagem automática utilizando algoritmos analíticos')}, garantindo "
-                f"subsidiação de dados fidedignos para tomadas de decisões estratégicas e gestão de capacidade de ambientes."
-            ),
-            
-            "ii_previsao_pca": (
-                "Alinhamento estratégico em conformidade com o Plano de Contratações Anual (PCA) do órgão. "
-                "O item classifica-se como Solução de Tecnologia da Informação e Comunicação, atendendo às metas macroinstitucionais "
-                "de transformação digital, governança de ativos e otimização de recursos públicos operacionais para o presente exercício."
-            ),
-            
-            "iii_requisitos_contratacao": (
-                f"Para fins de cumprimento do escopo funcional, a solução pretendida deverá apresentar de forma mandatória:\n"
-                f"1. Capacidades Operacionais: {', '.join(scout.get('escopo_funcional', ['Contagem em tempo real']))}.\n"
-                f"2. Requisitos Técnicos Críticos: {', '.join(analista_mercado.get('aspectos_tecnicos_relevantes', ['Processamento de vídeo em tempo real']))}.\n"
-                f"3. Segurança Cibernética e Governança: Proteção ativa contra incidentes e vulnerabilidades de acesso, "
-                f"garantindo conformidade integral com a Lei Geral de Proteção de Dados (LGPD) e diretrizes de integridade de dados públicos."
-            ),
-            
-            "iv_levantamento_mercado": (
-                f"O mapeamento de mercado identificou um ecossistema composto por fornecedores e integradores de tecnologia. "
-                f"A arquitetura predominante baseia-se em: {', '.join(analista_mercado.get('elementos_funcionais_comumente_encontrados', ['Algoritmos de detecção', 'Módulo de vídeo']))}. "
-                f"Modelos de disponibilização comuns encontrados: {', '.join(analista_mercado.get('modelos_de_disponibilizacao', ['Software licenciado', 'Solução em Nuvem']))}. "
-                f"Limitações de mercado mapeadas: {', '.join(analista_mercado.get('limitacoes_comuns', ['Restrições em ambientes com movimento intenso']))}."
-            ),
-            
-            "v_estimativa_quantidades": (
-                "O dimensionamento exato da volumetria licitada (quantitativo de licenças, servidores ou pontos de captura) "
-                "será formalmente consolidado no Termo de Referência, baseando-se no mapeamento geográfico e arquitetônico "
-                "das áreas monitoradas do órgão para evitar o superdimensionamento da infraestrutura de hardware."
-            ),
-            
-            "vi_estimativa_valor": (
-                "A formação preliminar de valores observará os formatos de fornecimento dominantes: "
-                f"{', '.join(analista_mercado.get('formas_fornecimento_comuns', ['Licença de uso', 'Serviço em nuvem']))}. "
-                "A estimativa real de custo será obtida mediante ampla pesquisa de mercado usando as tabelas oficiais, "
-                "orçamentos de fornecedores locais e análise comparativa de contratações públicas similares."
-            ),
-            
-            "vii_descricao_solucoes_existentes": solucoes_texto,
-            
-            "viii_justificativa_solucao_escolhida": (
-                f"A contratação de {objeto_original} justifica-se pelas seguintes vantagens diretas de mercado: "
-                f"{', '.join(analista_mercado.get('vantagens', ['Redução de custos operacionais', 'Precisão na contagem']))}. "
-                f"A escolha afasta riscos de ineficiência de pessoal alocado em contagens manuais, provendo base estruturada "
-                f"compatível com as plataformas de análise descritas pelo mercado (ex: {', '.join(analista_mercado.get('integracoes_comuns', ['Sistemas de segurança existentes']))}), "
-                f"representando o melhor ciclo de vida econômico e operacional."
-            ),
-            
-            "ix_estimativa_impacto_ambiental": (
-                "Os critérios de sustentabilidade aplicar-se-ão na infraestrutura física que suportará o processamento de IA. "
-                "Exigir-se-á conformidade com normas de descarte de resíduos eletrônicos (logística reversa) e "
-                "eficiência energética para os ativos de servidores ou appliances dedicados à análise de vídeo."
-            ),
-            
-            "x_providencias_previas": (
-                f"Como condicionantes para a eficácia do processo licitatório, definem-se as seguintes providências: "
-                f"1. Especificação minuciosa das regras de acurácia algorítmica para evitar inexecução parcial por falta de funcionalidade prática. "
-                f"2. Homologação das condições estruturais do órgão: {', '.join(analista_mercado.get('condicionantes_operacionais', ['Câmeras com resolução adequada', 'Iluminação compatível']))}."
-            ),
-            
-            "xi_contratacoes_correlatas": (
-                "Identifica-se estrita interdependência com as contratações vigentes de manutenção de CFTV, "
-                "licenciamento de softwares de VMS (Video Management System) e suporte de infraestrutura de rede corporativa. "
-                "Não se vislumbra a necessidade de contratações paralelas adicionais, visto que a solução aproveitará a "
-                "infraestrutura de captura de imagem já instalada no órgão."
-            ),
-            
-            "xii_resultados_pretendidos": (
-                f"Os resultados pretendidos consolidam-se na aplicação de: {', '.join(scout.get('palavras_chave', ['Algoritmos de detecção', 'Processamento em tempo real']))}. "
-                f"Busca-se mitigar lacunas de eficiência operacional, mitigar erros humanos e obter painéis gerenciais automatizados "
-                f"para controle de fluxo e capacidade volumétrica em tempo real."
-            ),
-            
-            "xiii_providencias_adequacao_ambiente": (
-                "Para recepção adequada da tecnologia, o órgão executará a revisão de sua topologia de rede local e "
-                "o posicionamento angular das câmeras. No plano jurídico de governança e privacidade, serão adotadas as seguintes diretrizes: "
-                f"Implementação de técnicas de anonimização e conformidade estrita com as regras de coleta de movimento da LGPD."
-            ),
-            
-            "xiv_analise_riscos": (
-                f"{riscos_texto}\n"
-                f"Diretrizes e Boas Práticas Recomendadas (TCU):\n"
-                f"1. Implementar testes rigorosos de funcionalidade prática durante as fases de homologação da entrega, "
-                f"evitando cenários de inexecução de sistemas complexos.\n"
-                f"2. Adotar protocolos de segurança cibernética robustos e auditorias de acessos para blindar a solução contra invasões externas.\n"
-                f"3. Garantir a atualização e transparência de dados públicos processados de forma a evitar lacunas fiscais ou operacionais.\n\n"
-                f"Mapeamento Analítico de Acórdãos Aplicados:\n{acordaos_texto}"
-            ),
-            
-            "posicionamento_conclusivo": (
-                f"Em face das manifestações técnicas, mapeamentos de mercado e em estrita consonância com a Lei 14.133/2021, "
-                f"a equipe de planejamento declara a VIABILIDADE TÉCNICA, JURÍDICA E ECONÔMICA da contratação do {objeto_original}."
-            )
-        }
+            PROCESSOS ANÁLOGOS DO COMPRAS.NET / PNCP (Referências de Mercado):
+            {json.dumps(dados_mercado_compras, ensure_ascii=False, indent=2)}
+            =======================================================================
 
-        # 5. Montagem Estruturada do Documento Word (.docx) com Alta Densidade Técnico-Jurídica
+            REGRAS CRÍTICAS PARA A RESPOSTA:
+            1. Você deve OBRIGATORIAMENTE fundamentar esta seção utilizando os acórdãos do TCU e os processos do PNCP/Compras.net fornecidos acima.
+            2. Cite os números dos acórdãos ou os padrões de contratação identificados nos portais oficiais para justificar as escolhas técnicas.
+            3. Não resuma. Use parágrafos densos e transcreva as boas práticas e restrições apontadas pelo TCU/PNCP relevantes para esta seção.
+            """
+
+            try:
+                # O Executor agora recebe o caminho correto corrigido do schema
+                resultado_secao = AgentExecutor.executar(prompt=prompt, schema_path=schema_path)
+                
+                if isinstance(resultado_secao, str):
+                    try:
+                        resultado_secao = json.loads(resultado_secao)
+                    except json.JSONDecodeError:
+                        pass
+                        
+                etp_dados_finais[secao_id] = resultado_secao
+            except Exception as e:
+                logger.error(f"Falha crítica ao gerar a secção {secao_id}: {e}.")
+                etp_dados_finais[secao_id] = {
+                    "erro": f"Secção não pôde ser detalhada devido a um erro de processamento interno: {str(e)}"
+                }
+
+        self.salvar_docx(etp_dados_finais, objeto_original)
+        return etp_dados_finais
+
+    def salvar_docx(self, dados: dict, objeto: str):
+        """Lê a árvore de dados complexa gerada e monta uma formatação limpa e profissional no Word."""
         doc = Document()
-        doc.add_heading("ESTUDO TÉCNICO PRELIMINAR (ETP)", level=1)
-        doc.add_paragraph("Instrução Processual Licitatória - Lei nº 14.133/2021")
-
-        secoes = [
-            ("1. OBJETO DA CONTRATAÇÃO", dados.get("objeto_etp")),
-            ("2. DESCRIÇÃO DA NECESSIDADE DA CONTRATAÇÃO", dados.get("i_descricao_necessidade")),
-            ("3. PREVISÃO NO PLANO DE CONTRATAÇÕES ANUAL (PCA)", dados.get("ii_previsao_pca")),
-            ("4. REQUISITOS DA CONTRATAÇÃO", dados.get("iii_requisitos_contratacao")),
-            ("5. LEVANTAMENTO DE MERCADO e ANÁLISE DE PROPORCIONALIDADE", dados.get("iv_levantamento_mercado")),
-            ("6. ESTIMATIVA DE QUANTIDADES DA CONTRATAÇÃO", dados.get("v_estimativa_quantidades")),
-            ("7. ESTIMATIVA DO VALOR DA CONTRATAÇÃO", dados.get("vi_estimativa_valor")),
-            ("8. DESCRIÇÃO DA SOLUÇÃO COMO UM TODO", dados.get("vii_descricao_solucoes_existentes")),
-            ("9. JUSTIFICATIVA DA SOLUÇÃO ESCOLHIDA", dados.get("viii_justificativa_solucao_escolhida")),
-            ("10. ESTIMATIVA DO IMPACTO AMBIENTAL", dados.get("ix_estimativa_impacto_ambiental")),
-            ("11. PROVIDÊNCIAS PRÉVIAS À CELEBRAÇÃO DO CONTRATO", dados.get("x_providencias_previas")),
-            ("12. CONTRATAÇÕES CORRELATAS E/OU INTERDEPENDENTES", dados.get("xi_contratacoes_correlatas")),
-            ("13. RESULTADOS PRETENDIDOS EM TERMOS DE EFICIÊNCIA E ECONOMICIDADE", dados.get("xii_resultados_pretendidos")),
-            ("14. PROVIDÊNCIAS DE ADEQUAÇÃO DO AMBIENTE DO ÓRGÃO", dados.get("xiii_providencias_adequacao_ambiente")),
-            ("15. GERENCIAMENTO DE RISCOS DA CONTRATAÇÃO (DIRETRIZES TCU)", dados.get("xiv_analise_riscos")),
-            ("16. POSICIONAMENTO CONCLUSIVO DA EQUIPE DE PLANEJAMENTO", dados.get("posicionamento_conclusivo")),
-        ]
-
-        for titulo, conteudo in secoes:
-            doc.add_heading(titulo, level=2)
-            doc.add_paragraph(str(conteudo if conteudo else "Seção analisada e validada em conformidade com as diretrizes do órgão."))
-
-        arquivo = f"ETP_{datetime.now():%Y%m%d_%H%M%S}.docx"
-        caminho = os.path.abspath(arquivo)
-        doc.save(arquivo)
+        doc.add_heading("ESTUDO TÉCNICO PRELIMINAR (ETP)", level=0)
         
-        logger.info(f"DOCX de alta densidade analítica gerado com sucesso em: {caminho}")
-        dados["arquivo_generated"] = caminho
-        return dados
+        p_sub = doc.add_paragraph()
+        p_sub.add_run(f"Objeto da Contratação: {objeto}\n").bold = True
+        p_sub.add_run(f"Instrução Processual Licitatória — Lei nº 14.133/2021\nData de Geração: {datetime.now():%d/%m/%Y %H:%M:%S}")
+
+        for indice, (secao_id, conteudo) in enumerate(dados.items(), start=1):
+            titulo_secao = f"{indice}. {secao_id.replace('_', ' ').upper()}"
+            doc.add_heading(titulo_secao, level=2)
+
+            # Converte e renderiza os dados tipados vindos do Schema granular de cada secção
+            if isinstance(conteudo, dict):
+                for chave, valor in conteudo.items():
+                    # Formata listas internas de forma elegante (ex: vantagens, desvantagens, kpis)
+                    if isinstance(valor, list):
+                        doc.add_paragraph(f"{chave.replace('_', ' ').title()}:").bold = True
+                        for item in valor:
+                            if isinstance(item, dict):
+                                # Trata sub-objetos dentro de listas como matrizes de risco ou alternativas
+                                p_item = doc.add_paragraph(style='List Bullet')
+                                for k_sub, v_sub in item.items():
+                                    p_item.add_run(f"{k_sub.replace('_', ' ').title()}: ").bold = True
+                                    p_item.add_run(f"{v_sub} | ")
+                            else:
+                                doc.add_paragraph(str(item), style='List Bullet')
+                    else:
+                        # Campos diretos de string longa
+                        if chave.lower() in [secao_id.lower(), "descricao_detalhada", "detalhes_solucao", "conclusao_tecnica"]:
+                            doc.add_paragraph(str(valor))
+                        else:
+                            p = doc.add_paragraph()
+                            p.add_run(f"{chave.replace('_', ' ').title()}: ").bold = True
+                            p.add_run(str(valor))
+            else:
+                doc.add_paragraph(str(conteudo))
+
+        # Salva o arquivo final com timestamp exato
+        nome_arquivo = f"ETP_Modular_{datetime.now():%Y%m%d_%H%M%S}.docx"
+        doc.save(nome_arquivo)
+        logger.info(f"Documento Word robusto gerado com sucesso em: {os.path.abspath(nome_arquivo)}")

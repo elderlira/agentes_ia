@@ -1,0 +1,7 @@
+{
+    "type": "object",
+    "required": ["analise_impacto"],
+    "properties": {
+      "analise_impacto": { "type": "string", "minLength": 300 }
+    }
+  }

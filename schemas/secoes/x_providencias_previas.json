@@ -1,0 +1,7 @@
+{
+    "type": "object",
+    "required": ["providencias"],
+    "properties": {
+      "providencias": { "type": "string", "minLength": 400 }
+    }
+  }

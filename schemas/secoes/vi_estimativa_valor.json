@@ -1,0 +1,8 @@
+{
+    "type": "object",
+    "required": ["metodologia_preco", "custo_estimado"],
+    "properties": {
+      "metodologia_preco": { "type": "string", "minLength": 300 },
+      "custo_estimado": { "type": "string" }
+    }
+  }

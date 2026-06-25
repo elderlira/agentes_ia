@@ -1,0 +1,7 @@
+{
+    "type": "object",
+    "required": ["alinhamento_estrategico"],
+    "properties": {
+      "alinhamento_estrategico": { "type": "string", "minLength": 300 }
+    }
+  }

@@ -1,0 +1,18 @@
+{
+    "type": "object",
+    "required": ["solucao", "criterios_escolha"],
+    "properties": {
+      "solucao": {"type": "string"},
+      "criterios_escolha": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["criterio", "fundamentacao"],
+          "properties": {
+            "criterio": {"type": "string"},
+            "fundamentacao": {"type": "string", "minLength": 200}
+          }
+        }
+      }
+    }
+  }
